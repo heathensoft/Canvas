@@ -9,29 +9,13 @@ in VS_OUT {
 
 uniform sampler2D[3] u_sampler_array;
 
-sampler2D canvasSampler() {
-    return u_sampler_array[0];
-}
+sampler2D canvasSampler()   { return u_sampler_array[0]; }
+sampler2D previewSampler()  { return u_sampler_array[1]; }
+sampler2D colorSampler()    { return u_sampler_array[2]; }
 
-sampler2D previewSampler() {
-    return u_sampler_array[1];
-}
-
-sampler2D colorSampler() {
-    return u_sampler_array[2];
-}
-
-vec4 samplePreview(vec2 uv) {
-    return texture(previewSampler(),uv);
-}
-
-vec4 sampleCanvas(vec2 uv) {
-    return texture(canvasSampler(),uv);
-}
-
-vec4 sampleColor(vec2 uv) {
-    return texture(colorSampler(),uv);
-}
+vec4 samplePreview(vec2 uv) { return texture(previewSampler(),uv); }
+vec4 sampleCanvas(vec2 uv)  { return texture(canvasSampler(),uv); }
+vec4 sampleColor(vec2 uv)   { return texture(colorSampler(),uv); }
 
 void main() {
 

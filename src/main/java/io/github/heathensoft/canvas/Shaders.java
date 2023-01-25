@@ -12,7 +12,7 @@ import org.tinylog.Logger;
  */
 
 
-public class CanvasShaders {
+public class Shaders {
     
     public static final String CANVAS_TO_SCREEN_SPACE_VERT_OLD = "res/glsl/canvas_to_screen_space.vert";
     public static final String CANVAS_TO_SCREEN_SPACE_FRAG_OLD = "res/glsl/canvas_to_screen_space.frag";
@@ -69,7 +69,7 @@ public class CanvasShaders {
     public static void initialize() throws Exception {
         if (!initialized) {
             Logger.info("initializing shaders");
-            Resources io = new Resources(CanvasShaders.class);
+            Resources io = new Resources(Shaders.class);
             
             commonUniforms = new CommonUniforms();
             lightUniforms = new LightUniforms();

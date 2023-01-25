@@ -2,20 +2,35 @@
 
 layout (location=0) out vec4 f_color;
 
-layout (std140, binding = 0) uniform CommonBlock {
-    mat4  screen_camera_combined;
-    mat4  canvas_camera_combined;
-    mat4  canvas_camera_combined_inv;
-    vec4  canvas_texture_bounds;
-    vec4  mouse_position_canvas;
-};
-
 in VS_OUT {
     vec2 uv;
     vec2 pos;
 } fs_in;
 
 uniform sampler2D u_sampler_2d;
+
+//********************************************************************
+// Common
+
+#define COMMON_BINDING_POINT 0
+
+struct Camera {
+    mat4 combined;
+    mat4 combined_inv;
+    vec3 position;
+    float zoom;
+};
+
+layout (std140, binding = COMMON_BINDING_POINT) uniform CommonBlock {
+    Camera camera;
+    vec4 texture_bounds;
+    vec2 mouse_world;
+    float tStep;
+    float amplitude;
+};
+
+//********************************************************************
+
 
 const float DARKEN = 0.8;
 const float R2 = 16.0 * 16.0;
@@ -27,8 +42,8 @@ void main() {
 
     vec4 color = texture(u_sampler_2d, fs_in.uv);
 
-    if(!withinTextureBounds(fs_in.pos, canvas_texture_bounds)) {
-        if(!withinMouseRadius(fs_in.pos, mouse_position_canvas.xy)) {
+    if(!withinTextureBounds(fs_in.pos, texture_bounds)) {
+        if(!withinMouseRadius(fs_in.pos, mouse_world)) {
             color.rgb *= DARKEN;
         }
     }

@@ -1,9 +1,9 @@
 package io.github.heathensoft.canvas.old;
 
 
-import io.github.heathensoft.canvas.old.brush.Channel;
-import io.github.heathensoft.canvas.old.io.PngExporter;
-import io.github.heathensoft.canvas.old.io.PngImporter;
+import io.github.heathensoft.canvas.old.brushold.Channel;
+import io.github.heathensoft.canvas.old.ioold.PngExporter;
+import io.github.heathensoft.canvas.old.ioold.PngImporter;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.io.External;
 import io.github.heathensoft.jlib.lwjgl.graphics.Framebuffer;

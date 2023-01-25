@@ -7,7 +7,7 @@ import org.lwjgl.system.MemoryStack;
 
 import java.nio.IntBuffer;
 
-import static io.github.heathensoft.canvas.CanvasShaders.*;
+import static io.github.heathensoft.canvas.Shaders.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
@@ -29,10 +29,10 @@ public class CanvasBackground implements Disposable {
     
     public CanvasBackground() throws Exception {
         Resources io = new Resources(CanvasBackground.class);
-        String vs_shader = io.asString(CANVAS_BACKGROUND_VERT);
-        String fs_shader = io.asString(CANVAS_BACKGROUND_FRAG);
+        String vs_shader = io.asString(CANVAS_BACKGROUND_VERT_OLD);
+        String fs_shader = io.asString(CANVAS_BACKGROUND_FRAG_OLD);
         shaderProgram = new ShaderProgram(vs_shader,fs_shader);
-        shaderProgram.createUniform(U_SAMPLER);
+        shaderProgram.createUniform(U_SAMPLER_2D);
         backgroundTexture = Texture.generate2D(2,2);
         backgroundTexture.bindToActiveSlot();
         backgroundTexture.wrapST(GL_REPEAT);
@@ -62,7 +62,7 @@ public class CanvasBackground implements Disposable {
     public void draw() {
         glDisable(GL_BLEND);
         shaderProgram.use();
-        shaderProgram.setUniform1i(U_SAMPLER,0);
+        shaderProgram.setUniform1i(U_SAMPLER_2D,0);
         backgroundTexture.bindToSlot(0);
         vertexArrayObject.bind();
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0);

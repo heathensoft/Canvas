@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas.old.io;
+package io.github.heathensoft.canvas.old.ioold;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.Image;

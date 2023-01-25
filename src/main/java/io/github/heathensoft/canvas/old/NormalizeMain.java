@@ -3,8 +3,8 @@ package io.github.heathensoft.canvas.old;
 import io.github.heathensoft.canvas.CanvasBackground;
 import io.github.heathensoft.canvas.CanvasGrid;
 import io.github.heathensoft.canvas.TSpaceVTXBuffer;
-import io.github.heathensoft.canvas.old.brush.Channel;
-import io.github.heathensoft.canvas.old.io.PngImporter;
+import io.github.heathensoft.canvas.old.brushold.Channel;
+import io.github.heathensoft.canvas.old.ioold.PngImporter;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.io.External;
 import io.github.heathensoft.jlib.lwjgl.graphics.Framebuffer;
@@ -23,7 +23,7 @@ import java.nio.IntBuffer;
 import java.nio.file.Path;
 import java.util.List;
 
-import static io.github.heathensoft.canvas.CanvasShaders.*;
+import static io.github.heathensoft.canvas.Shaders.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 

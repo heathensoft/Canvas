@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas.old.brush;
+package io.github.heathensoft.canvas.old.brushold;
 
 /**
  * @author Frederik Dahl

@@ -1,10 +1,9 @@
-package io.github.heathensoft.canvas.old;
+package io.github.heathensoft.canvas;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.*;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.utils.OrthographicCamera;
-import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -16,7 +15,6 @@ import static io.github.heathensoft.canvas.Shaders.*;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL12C.GL_CLAMP_TO_EDGE;
 import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL31.glDrawElementsInstanced;
@@ -37,8 +35,6 @@ public class SplitScreen implements Disposable {
     private final Vao vertexArrayObject;
     private final BufferObject indexBuffer;
     private final BufferObject vertexBuffer;
-    private final ShaderProgram canvas_to_screen_shader;
-    private final ShaderProgram texture_to_canvas_shader;
     private final Framebuffer framebuffer;
     
     public SplitScreen(int screen_width, int screen_height) throws Exception {
@@ -85,17 +81,6 @@ public class SplitScreen implements Disposable {
                 -1.0f,-1.0f, 0.0f, 0.0f, // Bottom left  3
         };
         
-        Resources io = new Resources(SplitScreen.class);
-        canvas_to_screen_shader = new ShaderProgram(
-                io.asString(CANVAS_TO_SCREEN_SPACE_VERT_OLD),
-                io.asString(CANVAS_TO_SCREEN_SPACE_FRAG_OLD));
-        canvas_to_screen_shader.createUniform(U_SAMPLER_ARRAY);
-        
-        texture_to_canvas_shader = new ShaderProgram(
-                io.asString(TEXTURE_TO_CANVAS_SPACE_VERT_OLD),
-                io.asString(TEXTURE_TO_CANVAS_SPACE_FRAG_OLD));
-        texture_to_canvas_shader.createUniform(U_SAMPLER_ARRAY);
-        
         vertexArrayObject = new Vao().bind();
         indexBuffer.bind();
         indexBuffer.bufferData(indices);
@@ -137,32 +122,34 @@ public class SplitScreen implements Disposable {
         return dest;
     }
     
-    // draw to fullscreen / default framebuffer
+    
     public void drawFromSplitScreen() {
+        // use: draw to fullscreen / default framebuffer
         glDisable(GL_BLEND);
-        canvas_to_screen_shader.use();
+        canvasToScreenProgram.use();
         try (MemoryStack stack = MemoryStack.stackPush()){
             IntBuffer buffer = stack.mallocInt(2);
             buffer.put(0).put(1).flip();
-            canvas_to_screen_shader.setUniform1iv(U_SAMPLER_ARRAY,buffer);
+            canvasToScreenProgram.setUniform1iv(U_SAMPLER_ARRAY,buffer);
             leftTexture().bindToSlot(0);
             rightTexture().bindToSlot(1);
         } vertexArrayObject.bind();
         glDrawElementsInstanced(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0,2);
     }
     
-    // bind this framebuffer and draw to both
-    public void drawToSplitScreen(Texture canvasTexture, Texture previewTexture, Texture sourceColor) {
+    
+    public void drawToSplitScreen(Texture canvasTexture, Texture previewTexture, Texture colorSource) {
+        // use: bind this framebuffer and draw to both
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-        texture_to_canvas_shader.use();
+        textureToCanvasProgram.use();
         try (MemoryStack stack = MemoryStack.stackPush()){
             IntBuffer buffer = stack.mallocInt(3);
             buffer.put(0).put(1).put(2).flip();
-            texture_to_canvas_shader.setUniform1iv(U_SAMPLER_ARRAY,buffer);
+            textureToCanvasProgram.setUniform1iv(U_SAMPLER_ARRAY,buffer);
             canvasTexture.bindToSlot(0);
             previewTexture.bindToSlot(1);
-            sourceColor.bindToSlot(2);
+            colorSource.bindToSlot(2);
         } vertexArrayObject.bind();
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0);
     }
@@ -194,7 +181,7 @@ public class SplitScreen implements Disposable {
         return framebuffer.texture(1);
     }
     
-    public OrthographicCamera canvasCamera() {
+    public OrthographicCamera camera() {
         return canvas_camera;
     }
     
@@ -211,8 +198,6 @@ public class SplitScreen implements Disposable {
                 vertexArrayObject,
                 indexBuffer,
                 vertexBuffer,
-                canvas_to_screen_shader,
-                texture_to_canvas_shader,
                 framebuffer
         );
     }

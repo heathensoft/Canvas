@@ -13,4 +13,3 @@ void main() {
     gl_Position = vec4(uv_to_ndc(a_uv),0.0,1.0);
 
 }
-

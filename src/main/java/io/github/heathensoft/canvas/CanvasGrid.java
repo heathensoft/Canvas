@@ -32,6 +32,7 @@ public class CanvasGrid implements Disposable {
     }
     
     public void draw(OrthographicCamera camera) {
+        // use: split screen framebuffer. draw to left
         if (show) {
             glDisable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
