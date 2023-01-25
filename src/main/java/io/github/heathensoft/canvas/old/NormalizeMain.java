@@ -1,5 +1,10 @@
-package io.github.heathensoft.canvas;
+package io.github.heathensoft.canvas.old;
 
+import io.github.heathensoft.canvas.CanvasBackground;
+import io.github.heathensoft.canvas.CanvasGrid;
+import io.github.heathensoft.canvas.TSpaceVTXBuffer;
+import io.github.heathensoft.canvas.old.brush.Channel;
+import io.github.heathensoft.canvas.old.io.PngImporter;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.io.External;
 import io.github.heathensoft.jlib.lwjgl.graphics.Framebuffer;
@@ -34,6 +39,7 @@ public class NormalizeMain extends Application {
     
     private ShaderProgram normalShader;
     private ShaderProgram passthroughShader;
+    private boolean _switch;
     
     //---------------------------------------
     
@@ -41,7 +47,7 @@ public class NormalizeMain extends Application {
     private static final int RESOLUTION_HEIGHT = 720;
     private SplitScreen splitScreen;
     private CanvasBackground canvasBackground;
-    private SharedUniforms sharedUniforms;
+    private UniformBatch uniformBatch;
     private CanvasGrid canvasGrid;
     private Vector4f mousePosition;
     private Vector4f textureBounds;
@@ -60,12 +66,12 @@ public class NormalizeMain extends Application {
         splitScreen = new SplitScreen(RESOLUTION_WIDTH,RESOLUTION_HEIGHT);
         current_zoom = splitScreen.canvasCamera().zoom;
         canvasBackground = new CanvasBackground();
-        sharedUniforms = new SharedUniforms(splitScreen.fullscreenCombined());
+        uniformBatch = new UniformBatch(splitScreen.fullscreenCombined());
         canvasGrid = new CanvasGrid();
         mousePosition = new Vector4f();
         
         External external = new External(External.USER_HOME());
-        Path texturePath = external.path().resolve("Circle.png");
+        Path texturePath = external.path().resolve("Tree.png");
         
         PngImporter importer = new PngImporter();
         importer.importColorImage(texturePath);
@@ -85,15 +91,15 @@ public class NormalizeMain extends Application {
         
         Resources io = new Resources();
         normalShader = new ShaderProgram(
-                io.asString(NORMAL_MAPPING_VERT),
-                io.asString(NORMAL_MAPPING_FRAG));
+                io.asString(NORMAL_MAPPING_VERT_OLD),
+                io.asString(NORMAL_MAPPING_FRAG_OLD));
         normalShader.createUniform(U_AMPLITUDE);
         normalShader.createUniform(U_SAMPLER_ARRAY);
     
         passthroughShader = new ShaderProgram(
-                io.asString(TEXTURE_PASSTHROUGH_VERT),
-                io.asString(TEXTURE_PASSTHROUGH_FRAG));
-        passthroughShader.createUniform(U_SAMPLER);
+                io.asString(TEXTURE_PASSTHROUGH_VERT_OLD),
+                io.asString(TEXTURE_PASSTHROUGH_FRAG_OLD));
+        passthroughShader.createUniform(U_SAMPLER_2D);
         
         TSpaceVTXBuffer.initialize();
     
@@ -113,12 +119,16 @@ public class NormalizeMain extends Application {
         if (keyboard.just_pressed(GLFW_KEY_ESCAPE)) Engine.get().exit();
         if (keyboard.just_pressed(GLFW_KEY_KP_ADD)) canvasGrid.incrementSize();
         if (keyboard.just_pressed(GLFW_KEY_KP_SUBTRACT)) canvasGrid.decrementSize();
+        if (keyboard.just_pressed(GLFW_KEY_L)) _switch = !_switch;
     
         if (mouse.scrolled()) {
             float amount = mouse.get_scroll();
             current_zoom -= amount;
             int pow = (int) current_zoom;
             camera.zoom = (float) Math.pow(2,pow);
+            camera.refresh();
+            System.out.println("bounds height: " + (camera.bounds.lengthY()));
+            System.out.println("zoom: " + camera.zoom);
         }
     
         if (mouse.is_dragging(Mouse.WHEEL)) {
@@ -134,7 +144,7 @@ public class NormalizeMain extends Application {
     protected void on_render(float frame_time, float alpha) {
         
         splitScreen.canvasCamera().refresh();
-        sharedUniforms.upload(
+        uniformBatch.upload(
                 splitScreen.canvasCamera(),
                 textureBounds,
                 mousePosition
@@ -174,7 +184,7 @@ public class NormalizeMain extends Application {
         Framebuffer.bindDraw(project.previewBuffer());
         Framebuffer.clear();
         passthroughShader.use();
-        passthroughShader.setUniform1i(U_SAMPLER,0);
+        passthroughShader.setUniform1i(U_SAMPLER_2D,0);
         normal_texture.bindToSlot(0);
         TSpaceVTXBuffer.transferElements();
         
@@ -189,16 +199,17 @@ public class NormalizeMain extends Application {
         canvasBackground.draw();
         splitScreen.setDrawBuffersBoth();
         
-        splitScreen.drawTo(
+        splitScreen.drawToSplitScreen(
                 depth_texture,
-                preview_texture
+                _switch ? color_texture : preview_texture,
+                color_texture
         );
         splitScreen.setDrawBufferLeft();
         canvasGrid.draw(splitScreen.canvasCamera());
         Framebuffer.bindDefault();
         Framebuffer.viewport();
         Framebuffer.clear();
-        splitScreen.drawFrom();
+        splitScreen.drawFromSplitScreen();
         
     }
     
@@ -216,7 +227,7 @@ public class NormalizeMain extends Application {
         Disposable.dispose(
                 canvasBackground,
                 canvasGrid,
-                sharedUniforms,
+                uniformBatch,
                 splitScreen,
                 project
         );

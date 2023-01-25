@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas;
+package io.github.heathensoft.canvas.old;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.*;
@@ -87,13 +87,13 @@ public class SplitScreen implements Disposable {
         
         Resources io = new Resources(SplitScreen.class);
         canvas_to_screen_shader = new ShaderProgram(
-                io.asString(CANVAS_TO_SCREEN_SPACE_VERT),
-                io.asString(CANVAS_TO_SCREEN_SPACE_FRAG));
+                io.asString(CANVAS_TO_SCREEN_SPACE_VERT_OLD),
+                io.asString(CANVAS_TO_SCREEN_SPACE_FRAG_OLD));
         canvas_to_screen_shader.createUniform(U_SAMPLER_ARRAY);
         
         texture_to_canvas_shader = new ShaderProgram(
-                io.asString(TEXTURE_TO_CANVAS_SPACE_VERT),
-                io.asString(TEXTURE_TO_CANVAS_SPACE_FRAG));
+                io.asString(TEXTURE_TO_CANVAS_SPACE_VERT_OLD),
+                io.asString(TEXTURE_TO_CANVAS_SPACE_FRAG_OLD));
         texture_to_canvas_shader.createUniform(U_SAMPLER_ARRAY);
         
         vertexArrayObject = new Vao().bind();
@@ -138,7 +138,7 @@ public class SplitScreen implements Disposable {
     }
     
     // draw to fullscreen / default framebuffer
-    public void drawFrom() {
+    public void drawFromSplitScreen() {
         glDisable(GL_BLEND);
         canvas_to_screen_shader.use();
         try (MemoryStack stack = MemoryStack.stackPush()){
@@ -152,16 +152,17 @@ public class SplitScreen implements Disposable {
     }
     
     // bind this framebuffer and draw to both
-    public void drawTo(Texture frontBufferR8, Texture previewRGB8) {
+    public void drawToSplitScreen(Texture canvasTexture, Texture previewTexture, Texture sourceColor) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         texture_to_canvas_shader.use();
         try (MemoryStack stack = MemoryStack.stackPush()){
-            IntBuffer buffer = stack.mallocInt(2);
-            buffer.put(0).put(1).flip();
+            IntBuffer buffer = stack.mallocInt(3);
+            buffer.put(0).put(1).put(2).flip();
             texture_to_canvas_shader.setUniform1iv(U_SAMPLER_ARRAY,buffer);
-            frontBufferR8.bindToSlot(0);
-            previewRGB8.bindToSlot(1);
+            canvasTexture.bindToSlot(0);
+            previewTexture.bindToSlot(1);
+            sourceColor.bindToSlot(2);
         } vertexArrayObject.bind();
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0);
     }

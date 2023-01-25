@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas.rendering;
+package io.github.heathensoft.canvas.old.rendering;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.BufferObject;

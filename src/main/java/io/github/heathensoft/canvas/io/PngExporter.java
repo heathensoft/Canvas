@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas;
+package io.github.heathensoft.canvas.io;
 
 import io.github.heathensoft.jlib.common.io.External;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
@@ -27,6 +27,8 @@ public class PngExporter {
     private static final String extension = ".png";
     private static final String color_suffix = "_color";
     private static final String depth_suffix = "_depth";
+    private static final String volume_suffix = "_volume";
+    private static final String details_suffix = "_details";
     private static final String specular_suffix = "_specular";
     private static final String emissive_suffix = "_emissive";
     private static final String normals_suffix = "_normals";
@@ -93,6 +95,54 @@ public class PngExporter {
         External projectFolder = new External(outputDirectory);
         projectFolder.createDirectories();
         String rootName = outputName + depth_suffix;
+        External color_out = new External(projectFolder.path().resolve(rootName + extension));
+        if (!overwrite) {
+            int numerator = 1;
+            while (color_out.exist()) {
+                String filename = rootName + "_" + numerator;
+                color_out.set(projectFolder.path().resolve(filename + extension));
+            }
+        }
+        int width = depthTexture.width();
+        int height = depthTexture.height();
+        int channels = depthTexture.format().channels;
+        ByteBuffer pixels = MemoryUtil.memAlloc(width * height * channels);
+        depthTexture.bindToActiveSlot();
+        depthTexture.get(pixels);
+        stbi_flip_vertically_on_write(true);
+        stbi_write_png(color_out.path().toString(),width,height,
+                channels,pixels,width * channels);
+        MemoryUtil.memFree(pixels);
+    }
+    
+    public void exportDetails(Texture depthTexture, boolean overwrite) throws Exception {
+        External projectFolder = new External(outputDirectory);
+        projectFolder.createDirectories();
+        String rootName = outputName + details_suffix;
+        External color_out = new External(projectFolder.path().resolve(rootName + extension));
+        if (!overwrite) {
+            int numerator = 1;
+            while (color_out.exist()) {
+                String filename = rootName + "_" + numerator;
+                color_out.set(projectFolder.path().resolve(filename + extension));
+            }
+        }
+        int width = depthTexture.width();
+        int height = depthTexture.height();
+        int channels = depthTexture.format().channels;
+        ByteBuffer pixels = MemoryUtil.memAlloc(width * height * channels);
+        depthTexture.bindToActiveSlot();
+        depthTexture.get(pixels);
+        stbi_flip_vertically_on_write(true);
+        stbi_write_png(color_out.path().toString(),width,height,
+                channels,pixels,width * channels);
+        MemoryUtil.memFree(pixels);
+    }
+    
+    public void exportVolume(Texture depthTexture, boolean overwrite) throws Exception {
+        External projectFolder = new External(outputDirectory);
+        projectFolder.createDirectories();
+        String rootName = outputName + volume_suffix;
         External color_out = new External(projectFolder.path().resolve(rootName + extension));
         if (!overwrite) {
             int numerator = 1;

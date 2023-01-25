@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas;
+package io.github.heathensoft.canvas.old.io;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.Image;
@@ -28,6 +28,7 @@ public class PngImporter implements Disposable {
     private Image specular_image;
     private Image emissive_image;
     private Status status;
+    private String name;
     
     public record Textures(Texture color_source,
                            Texture front_buffer_depth,
@@ -52,6 +53,7 @@ public class PngImporter implements Disposable {
     
     public PngImporter() {
         status = Status.INCOMPLETE;
+        name = "untitled";
     }
     
     public void importColorImage(Path path) throws Exception {
@@ -62,6 +64,7 @@ public class PngImporter implements Disposable {
             diffuse_image.dispose();
         } diffuse_image = image;
         status = validate();
+        name = resolveName(path);
     }
     
     public void importDepthImage(Path path) throws Exception {
@@ -317,6 +320,10 @@ public class PngImporter implements Disposable {
         return status;
     }
     
+    public String name() {
+        return name;
+    }
+    
     /**
      * The PngImporter is reusable after disposal.
      */
@@ -327,5 +334,10 @@ public class PngImporter implements Disposable {
         specular_image = null;
         emissive_image = null;
         status = validate();
+    }
+    
+    private String resolveName(Path diffusePath) {
+        String filename = diffusePath.getFileName().toString();
+        return filename.replace(".png","");
     }
 }

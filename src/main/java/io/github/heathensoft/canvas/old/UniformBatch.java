@@ -1,9 +1,11 @@
-package io.github.heathensoft.canvas;
+package io.github.heathensoft.canvas.old;
 
+import io.github.heathensoft.canvas.light.PointLight;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.BufferObject;
 import io.github.heathensoft.jlib.lwjgl.utils.OrthographicCamera;
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryStack;
 
@@ -18,7 +20,7 @@ import static org.lwjgl.opengl.GL31.GL_UNIFORM_BUFFER;
  */
 
 
-public class SharedUniforms implements Disposable {
+public class UniformBatch implements Disposable {
 
     public static final int BINDING_POINT = 0;
     
@@ -27,7 +29,7 @@ public class SharedUniforms implements Disposable {
     private final int dynamic_size_float;
     private final int total_size_float;
     
-    public SharedUniforms(Matrix4f fullscreen) {
+    public UniformBatch(Matrix4f fullscreen) {
         uniformBuffer = new BufferObject(GL_UNIFORM_BUFFER,GL_DYNAMIC_DRAW);
         uniformBuffer.bind();
         int num_mat4 = 3;
@@ -43,6 +45,15 @@ public class SharedUniforms implements Disposable {
             fullscreen.get(buffer);
             uniformBuffer.bufferSubData(buffer,0);
         } uniformBuffer.bindBufferBase(BINDING_POINT);
+    }
+    
+    public void upload(
+            OrthographicCamera camera,
+            Vector2f mouse,
+            Vector4f textureBounds,
+            PointLight light,
+            float frame_time ) {
+        
     }
     
     public void upload(OrthographicCamera projectCamera, Vector4f textureBounds, Vector4f mousePosition) {
