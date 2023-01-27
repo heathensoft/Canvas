@@ -9,7 +9,7 @@ package io.github.heathensoft.canvas.brush;
 public enum Channel {
     
     DETAILS(0,"Details"),
-    VOLUME(0,"Volume"),
+    VOLUME(1,"Volume"),
     SPECULAR(2,"Specular"),
     EMISSIVE(3,"Emissive");
     

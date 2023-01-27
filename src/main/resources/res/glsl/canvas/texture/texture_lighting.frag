@@ -98,7 +98,6 @@ vec4 fetchNormal(ivec2 texel)   { return texelFetch(normalSampler(),texel,0);   
 vec4 samplePalette(vec3 vec)    { return texture(paletteSampler(),vec);         }
 
 
-//const float FRAGMENT_VIRTUAL_HEIGHT_MAX = 16.0; // this has to correspond to what i am using for the shadowmap
 const float CAMERA_VIRTUAL_Z = 512.0; // zoom == 1
 const float SHINE_CONSTANT = 128.0;
 
@@ -107,7 +106,7 @@ void main() {
     vec4 color = vec4(1.0,1.0,1.0,1.0);
 
     vec2 uv = fs_in.uv;
-    ivec2 texel = ivec2(gl_FragCoord);
+    ivec2 texel = ivec2(gl_FragCoord.xy);
 
     vec4 source_color = fetchColor(texel);
     float source_alpha = source_color.a;
@@ -139,10 +138,10 @@ void main() {
             }
 
             vec3 fragment_color = source_color.rgb;
-            vec3 fragment_normal = normalize(fetchNormal(texel).xyz * 2.0 - 1); // might be xzy
+            vec3 fragment_normal = normalize(fetchNormal(texel).xyz * 2.0 - 1);
 
             float fragment_z = (fetchDepth(texel).r * 2.0 - 1) * amplitude;
-            vec2 fragment_xy = vec2(texture_bounds.xy + gl_FragCoord);
+            vec2 fragment_xy = vec2(texture_bounds.xy + gl_FragCoord.xy);
             vec3 fragment_position = vec3(fragment_xy, fragment_z);
 
             vec3 camera_position = vec3(camera.position.xy, CAMERA_VIRTUAL_Z * camera.zoom);
@@ -154,7 +153,7 @@ void main() {
             float diff = max(dot(fragment_normal, to_light_direction), 0.0);
 
             // specular
-            float shine = fetchSpecular(texel).r * SHINE_CONSTANT; // experiment with this
+            float shine = (fetchSpecular(texel).r + 0.2) * SHINE_CONSTANT; // experiment with this
             vec3 to_eye_direction = normalize(camera_position - fragment_position);
             vec3 halfway_direction = normalize(to_light_direction + to_eye_direction);
             float spec = pow(max(dot(fragment_normal,halfway_direction),0.0),shine);
@@ -171,13 +170,13 @@ void main() {
             att.linear * d +
             att.quadratic * d * d);
 
-            vec3 light_a = light.color * light.ambience; // * (2 * att) try
+            vec3 light_a = light.color * light.ambience;// * (2 * att_inv);
             vec3 light_d = light.color * light.diffuse_strenght * att_inv;
             vec3 light_s = light.color * att_inv;
 
             vec3 frag_a = fragment_color * light_a;
             vec3 frag_d = fragment_color * light_d * diff * (1.0 - shadow);
-            vec3 frag_s = fragment_color * light.s * spec * (1.0 - shadow);
+            vec3 frag_s = fragment_color * light_s * spec * (1.0 - shadow);
             vec3 frag_e = fragment_color * emissive;
             vec3 frag_c = (frag_a + frag_d + frag_s + frag_e);
 

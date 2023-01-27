@@ -1,6 +1,5 @@
 package io.github.heathensoft.canvas.old;
 
-import io.github.heathensoft.canvas.CanvasBackground;
 import io.github.heathensoft.canvas.CanvasGrid;
 import io.github.heathensoft.canvas.TSpaceVTXBuffer;
 import io.github.heathensoft.canvas.old.brushold.Channel;
@@ -46,7 +45,7 @@ public class NormalizeMain extends Application {
     private static final int RESOLUTION_WIDTH = 1280;
     private static final int RESOLUTION_HEIGHT = 720;
     private SplitScreen splitScreen;
-    private CanvasBackground canvasBackground;
+    private CanvasBackgroundOld canvasBackground;
     private UniformBatch uniformBatch;
     private CanvasGrid canvasGrid;
     private Vector4f mousePosition;
@@ -65,7 +64,7 @@ public class NormalizeMain extends Application {
         
         splitScreen = new SplitScreen(RESOLUTION_WIDTH,RESOLUTION_HEIGHT);
         current_zoom = splitScreen.canvasCamera().zoom;
-        canvasBackground = new CanvasBackground();
+        canvasBackground = new CanvasBackgroundOld();
         uniformBatch = new UniformBatch(splitScreen.fullscreenCombined());
         canvasGrid = new CanvasGrid();
         mousePosition = new Vector4f();

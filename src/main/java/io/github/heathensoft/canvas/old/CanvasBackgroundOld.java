@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas;
+package io.github.heathensoft.canvas.old;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.*;
@@ -19,14 +19,20 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
  */
 
 
-public class CanvasBackground implements Disposable {
+public class CanvasBackgroundOld implements Disposable {
     
+    private final ShaderProgram shaderProgram;
     private final BufferObject vertexBuffer;
     private final BufferObject indexBuffer;
     private final Texture backgroundTexture;
     private final Vao vertexArrayObject;
     
-    public CanvasBackground() throws Exception {
+    public CanvasBackgroundOld() throws Exception {
+        Resources io = new Resources(CanvasBackgroundOld.class);
+        String vs_shader = io.asString(CANVAS_BACKGROUND_VERT_OLD);
+        String fs_shader = io.asString(CANVAS_BACKGROUND_FRAG_OLD);
+        shaderProgram = new ShaderProgram(vs_shader,fs_shader);
+        shaderProgram.createUniform(U_SAMPLER_2D);
         backgroundTexture = Texture.generate2D(2,2);
         backgroundTexture.bindToActiveSlot();
         backgroundTexture.wrapST(GL_REPEAT);
@@ -55,8 +61,8 @@ public class CanvasBackground implements Disposable {
     
     public void draw() {
         glDisable(GL_BLEND);
-        canvasBackgroundProgram.use();
-        canvasBackgroundProgram.setUniform1i(U_SAMPLER_2D,0);
+        shaderProgram.use();
+        shaderProgram.setUniform1i(U_SAMPLER_2D,0);
         backgroundTexture.bindToSlot(0);
         vertexArrayObject.bind();
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0);
@@ -78,6 +84,7 @@ public class CanvasBackground implements Disposable {
     @Override
     public void dispose() {
         Disposable.dispose(
+                shaderProgram,
                 backgroundTexture,
                 vertexArrayObject,
                 vertexBuffer,

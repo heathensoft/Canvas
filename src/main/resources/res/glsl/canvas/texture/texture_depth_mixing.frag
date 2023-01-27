@@ -13,10 +13,10 @@ vec4 fetchDetail(ivec2 texel) {return texelFetch(detailSampler(), texel, 0);}
 
 void main() {
 
-    u_detail_weight = clamp(u_detail_weight,0.0,1.0);
-    float detail_red = fetchDetail(ivec2(gl_FragCoord)).r;
-    float volume_red = fetchVolume(ivec2(gl_FragCoord)).r;
-    float mixed_red = mix(detail_red,volume_red,u_detail_weight);
+    float weight = clamp(u_detail_weight,0.0,1.0);
+    float detail_red = fetchDetail(ivec2(gl_FragCoord.xy)).r;
+    float volume_red = fetchVolume(ivec2(gl_FragCoord.xy)).r;
+    float mixed_red = mix(detail_red,volume_red,weight);
     f_color = vec4(mixed_red,0.0,0.0,1.0);
 
 }

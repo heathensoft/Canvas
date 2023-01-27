@@ -17,7 +17,7 @@ import java.util.List;
  */
 
 
-public class Palette implements Disposable {
+public class PaletteOld implements Disposable {
     
     
     private static final List<String> validExtensions;
@@ -33,11 +33,11 @@ public class Palette implements Disposable {
     private final Texture palette;
     private final String name;
     
-    public Palette(List<Color> colors) {
+    public PaletteOld(List<Color> colors) {
         this("untitled",colors);
     }
     
-    public Palette(String name, List<Color> colors) {
+    public PaletteOld(String name, List<Color> colors) {
         if (colors.isEmpty()) colors.add(Color.WHITE.cpy());
         this.name = name;
         this.colors = colors;
@@ -61,7 +61,7 @@ public class Palette implements Disposable {
         Disposable.dispose(palette);
     }
     
-    public static void toFile(Palette palette, Path directory) throws Exception {
+    public static void toFile(PaletteOld palette, Path directory) throws Exception {
         External folder = new External(directory);
         if (folder.isFolder()) {
             List<String> lines = new ArrayList<>(palette.colors().size());
@@ -74,11 +74,11 @@ public class Palette implements Disposable {
         } throw new Exception("failed to save palette to folder: " + folder.path().toString());
     }
     
-    public static Palette fromFile(String path) throws Exception {
+    public static PaletteOld fromFile(String path) throws Exception {
         return fromFile(Path.of(path));
     }
     
-    public static Palette fromFile(Path path) throws Exception {
+    public static PaletteOld fromFile(Path path) throws Exception {
         External file = new External(path);
         failedToReadPalette:
         if(file.isFile()) {
@@ -100,7 +100,7 @@ public class Palette implements Disposable {
                 }
                 if (colors.isEmpty())
                     break failedToReadPalette;
-                return new Palette(paletteName,colors);
+                return new PaletteOld(paletteName,colors);
             }
         } throw new Exception("failed to read palette");
     }

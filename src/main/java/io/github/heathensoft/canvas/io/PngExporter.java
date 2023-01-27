@@ -53,6 +53,7 @@ public class PngExporter {
             while (color_out.exist()) {
                 String filename = rootName + "_" + numerator;
                 color_out.set(projectFolder.path().resolve(filename + extension));
+                numerator++;
             }
         }
         int width = diffuseTexture.width();
@@ -77,6 +78,7 @@ public class PngExporter {
             while (color_out.exist()) {
                 String filename = rootName + "_" + numerator;
                 color_out.set(projectFolder.path().resolve(filename + extension));
+                numerator++;
             }
         }
         int width = normalsTexture.width();
@@ -101,6 +103,7 @@ public class PngExporter {
             while (color_out.exist()) {
                 String filename = rootName + "_" + numerator;
                 color_out.set(projectFolder.path().resolve(filename + extension));
+                numerator++;
             }
         }
         int width = depthTexture.width();
@@ -125,6 +128,7 @@ public class PngExporter {
             while (color_out.exist()) {
                 String filename = rootName + "_" + numerator;
                 color_out.set(projectFolder.path().resolve(filename + extension));
+                numerator++;
             }
         }
         int width = depthTexture.width();
@@ -149,6 +153,7 @@ public class PngExporter {
             while (color_out.exist()) {
                 String filename = rootName + "_" + numerator;
                 color_out.set(projectFolder.path().resolve(filename + extension));
+                numerator++;
             }
         }
         int width = depthTexture.width();
@@ -215,6 +220,7 @@ public class PngExporter {
             while (specular_out.exist()) {
                 String filename = rootName + "_" + numerator;
                 specular_out.set(projectFolder.path().resolve(filename + extension));
+                numerator++;
             }
         }
         int width = specularTexture.width();
@@ -242,6 +248,7 @@ public class PngExporter {
             while (emissive_out.exist()) {
                 String filename = rootName + "_" + numerator;
                 emissive_out.set(projectFolder.path().resolve(filename + extension));
+                numerator++;
             }
         }
         int width = emissiveTexture.width();
@@ -266,6 +273,7 @@ public class PngExporter {
             while (preview_out.exist()) {
                 String filename = rootName + "_" + numerator;
                 preview_out.set(projectFolder.path().resolve(filename + extension));
+                numerator++;
             }
         }
         int width = previewTexture.width();

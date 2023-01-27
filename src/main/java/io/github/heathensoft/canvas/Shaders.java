@@ -94,7 +94,7 @@ public class Shaders {
             textureNormalsProgram = new ShaderProgram(
                     io.asString(TEXTURE_NORMAL_MAPPING_VERT),
                     io.asString(TEXTURE_NORMAL_MAPPING_FRAG));
-            textureNormalsProgram.createUniform(U_SAMPLER_2D);
+            textureNormalsProgram.createUniform(U_SAMPLER_ARRAY);
             
             textureDepthMixingProgram = new ShaderProgram(
                     io.asString(TEXTURE_DEPTH_MIXING_VERT),
