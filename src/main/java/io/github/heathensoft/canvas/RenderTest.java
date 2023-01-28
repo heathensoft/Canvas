@@ -1,22 +1,17 @@
 package io.github.heathensoft.canvas;
 
 import io.github.heathensoft.canvas.brush.Channel;
-import io.github.heathensoft.canvas.io.PaletteImporter;
-import io.github.heathensoft.canvas.io.PaletteOld;
 import io.github.heathensoft.canvas.light.Attenuation;
 import io.github.heathensoft.canvas.light.PointLight;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.Color;
 import io.github.heathensoft.jlib.lwjgl.graphics.Framebuffer;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
-import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 import static io.github.heathensoft.canvas.Shaders.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -51,15 +46,15 @@ public class RenderTest implements Disposable {
     public RenderTest(SplitScreen splitScreen, Project project) throws Exception {
         Shaders.initialize();
         TSpaceVTXBuffer.initialize();
-        PaletteImporter.loadResources();
+        ColorPalette.loadResources();
         this.splitScreen = splitScreen;
         this.project = project;
         this.canvasGrid = new CanvasGrid();
         this.background = new CanvasBackground();
         this.light = new PointLight(
                 new Vector3f(0,16,20),
-                new Color(0.91f,0.41f,0.47f,1.0f),
-                Attenuation.ATT_600,
+                new Color(0.93f,0.95f,0.970f,1.0f),
+                Attenuation.ATT_325,
                 0.7f,
                 0.4f);
         
@@ -162,7 +157,7 @@ public class RenderTest implements Disposable {
         textureLightingProgram.use();
         textureLightingProgram.setUniform1i(U_OPTIONS,preview_options);
         textureLightingProgram.setUniform1i(U_SAMPLER_3D,6);
-        ColorPalette.get("polxel-42").texture().bindToSlot(6);
+        ColorPalette.get("bright_future").texture().bindToSlot(6);
         // upload palette here
         try (MemoryStack stack = MemoryStack.stackPush()){
             IntBuffer buffer = stack.mallocInt(6);
@@ -209,6 +204,15 @@ public class RenderTest implements Disposable {
     
     
     public void dispose() {
+        /*
+        try {
+            PngExporter exporter = new PngExporter(External.USER_HOME("desktop","ritual"),"ritual");
+            exporter.exportPreview(project.previewBuffer().texture(0),false);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+         */
         TSpaceVTXBuffer.dispose();
         Shaders.dispose();
         ColorPalette.disposeAll();

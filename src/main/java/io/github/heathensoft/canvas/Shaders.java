@@ -14,18 +14,6 @@ import org.tinylog.Logger;
 
 public class Shaders {
     
-    public static final String CANVAS_TO_SCREEN_SPACE_VERT_OLD = "res/glsl/canvas_to_screen_space.vert";
-    public static final String CANVAS_TO_SCREEN_SPACE_FRAG_OLD = "res/glsl/canvas_to_screen_space.frag";
-    public static final String TEXTURE_TO_CANVAS_SPACE_VERT_OLD = "res/glsl/texture_to_canvas_space.vert";
-    public static final String TEXTURE_TO_CANVAS_SPACE_FRAG_OLD = "res/glsl/texture_to_canvas_space.frag";
-    public static final String TEXTURE_PASSTHROUGH_VERT_OLD = "res/glsl/texture_passthrough.vert";
-    public static final String TEXTURE_PASSTHROUGH_FRAG_OLD = "res/glsl/texture_passthrough.frag";
-    public static final String CANVAS_BACKGROUND_VERT_OLD = "res/glsl/canvas_background.vert";
-    public static final String CANVAS_BACKGROUND_FRAG_OLD = "res/glsl/canvas_background.frag";
-    public static final String NORMAL_MAPPING_VERT_OLD = "res/glsl/normal_mapping.vert";
-    public static final String NORMAL_MAPPING_FRAG_OLD = "res/glsl/normal_mapping.frag";
-    
-    
     public static final String TEXTURE_DEPTH_MIXING_VERT = "res/glsl/canvas/texture/texture_depth_mixing.vert";
     public static final String TEXTURE_DEPTH_MIXING_FRAG = "res/glsl/canvas/texture/texture_depth_mixing.frag";
     public static final String TEXTURE_LIGHTING_VERT = "res/glsl/canvas/texture/texture_lighting.vert";
@@ -43,12 +31,10 @@ public class Shaders {
     public static final String CANVAS_BACKGROUND_VERT = "res/glsl/canvas/canvas_background.vert";
     public static final String CANVAS_BACKGROUND_FRAG = "res/glsl/canvas/canvas_background.frag";
     
-    
     public static final String U_OPTIONS = "u_options";
     public static final String U_SAMPLER_2D = "u_sampler_2d";
     public static final String U_SAMPLER_3D = "u_sampler_3d";
     public static final String U_SAMPLER_ARRAY = "u_sampler_array";
-    public static final String U_AMPLITUDE = "u_amplitude";
     public static final String U_DETAIL_WEIGHT = "u_detail_weight";
     
     private static boolean initialized;

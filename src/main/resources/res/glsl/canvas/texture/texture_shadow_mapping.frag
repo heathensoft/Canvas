@@ -63,7 +63,8 @@ vec3 clampColor(vec3 rgb) {
 //********************************************************************
 
 #define PI_HALF 1.5707963268
-#define MAX_SAMPLES 64
+#define SAMPLE_DENSITY 4.0
+#define MAX_SAMPLES 128
 
 const vec3 PLANE_NORMAL = vec3(0.0,0.0,1.0);
 
@@ -88,7 +89,7 @@ void main() {
     float b = a / sinA;
     float c = b * sin(C);
 
-    int num_samples = int(min(MAX_SAMPLES,int(round(c))));
+    int num_samples = int(min(MAX_SAMPLES,int(round(c * SAMPLE_DENSITY))));
     float sample_delta = b / num_samples;
     vec3 move_vec = vec3(to_light_dir) * sample_delta;
     vec3 sample_pos = vec3(gl_FragCoord.xy,0.0); // z does not matter i think

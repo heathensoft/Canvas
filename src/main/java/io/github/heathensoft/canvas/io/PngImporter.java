@@ -425,4 +425,6 @@ public class PngImporter implements Disposable {
         String filename = diffusePath.getFileName().toString();
         return filename.replace(".png","");
     }
+    
+    
 }

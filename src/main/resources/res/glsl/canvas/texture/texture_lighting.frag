@@ -153,7 +153,7 @@ void main() {
             float diff = max(dot(fragment_normal, to_light_direction), 0.0);
 
             // specular
-            float shine = (fetchSpecular(texel).r + 0.2) * SHINE_CONSTANT; // experiment with this
+            float shine = (fetchSpecular(texel).r + 0.1) * SHINE_CONSTANT; // experiment with this
             vec3 to_eye_direction = normalize(camera_position - fragment_position);
             vec3 halfway_direction = normalize(to_light_direction + to_eye_direction);
             float spec = pow(max(dot(fragment_normal,halfway_direction),0.0),shine);
@@ -170,7 +170,7 @@ void main() {
             att.linear * d +
             att.quadratic * d * d);
 
-            vec3 light_a = light.color * light.ambience;// * (2 * att_inv);
+            vec3 light_a = light.color * light.ambience;
             vec3 light_d = light.color * light.diffuse_strenght * att_inv;
             vec3 light_s = light.color * att_inv;
 

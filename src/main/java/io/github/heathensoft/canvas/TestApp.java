@@ -45,7 +45,7 @@ public class TestApp extends Application {
         mouse_position = new Vector2f();
     
         External external = new External(External.USER_HOME("desktop"));
-        Path texturePath = external.path().resolve("boob.png");
+        Path texturePath = external.path().resolve("someShape.png");
     
         PngImporter importer = new PngImporter();
         importer.importColorImage(texturePath);
@@ -92,9 +92,18 @@ public class TestApp extends Application {
         mouse_position.set(dest.x,dest.y);
         
         if(mouse.button_pressed(Mouse.RIGHT)) {
-            renderer.light.position().set(mouse_position.x,mouse_position.y,20);
+            float z = renderer.light.position().z;
+            renderer.light.position().set(mouse_position.x,mouse_position.y,z);
         }
-    
+        
+        if (keyboard.just_pressed(GLFW_KEY_S)) {
+            float z = renderer.light.position().z;
+            renderer.light.position().z = Math.max(20,z-10);
+            
+        }if (keyboard.just_pressed(GLFW_KEY_W)) {
+            float z = renderer.light.position().z;
+            renderer.light.position().z = Math.min(500,z+10);
+        }
         
     }
     
