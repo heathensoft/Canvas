@@ -98,7 +98,7 @@ public class RenderTest implements Disposable {
         //DEPTH MIXING
         
         Framebuffer.bindDraw(project.depthBuffer());
-        Framebuffer.clear();
+        //Framebuffer.clear();
         
         textureDepthMixingProgram.use();
         textureDepthMixingProgram.setUniform1f(U_DETAIL_WEIGHT,0.5f);
@@ -118,7 +118,7 @@ public class RenderTest implements Disposable {
         //NORMAL MAPPING
     
         Framebuffer.bindDraw(project.normalsBuffer());
-        Framebuffer.clear();
+        //Framebuffer.clear();
         
         textureNormalsProgram.use();
     
@@ -137,7 +137,7 @@ public class RenderTest implements Disposable {
         // SHADOW MAPPING
         
         Framebuffer.bindDraw(project.shadowBuffer());
-        Framebuffer.clear();
+        //Framebuffer.clear();
         
         textureShadowsProgram.use();
         textureShadowsProgram.setUniform1i(U_SAMPLER_2D,0);

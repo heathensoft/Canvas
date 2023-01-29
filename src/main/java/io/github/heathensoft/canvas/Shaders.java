@@ -1,5 +1,6 @@
 package io.github.heathensoft.canvas;
 
+import io.github.heathensoft.canvas.brush.BrushUniforms;
 import io.github.heathensoft.canvas.light.LightUniforms;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.ShaderProgram;
@@ -30,6 +31,13 @@ public class Shaders {
     public static final String CANVAS_TO_SCREEN_SPACE_FRAG = "res/glsl/canvas/canvas_to_screen_space.frag";
     public static final String CANVAS_BACKGROUND_VERT = "res/glsl/canvas/canvas_background.vert";
     public static final String CANVAS_BACKGROUND_FRAG = "res/glsl/canvas/canvas_background.frag";
+    public static final String TO_BRUSH_OVERLAY_VERT = "res/glsl/canvas/brush/stroke_to_brush_overlay.vert";
+    public static final String TO_BRUSH_OVERLAY_FRAG = "res/glsl/canvas/brush/stroke_to_brush_overlay.frag";
+    public static final String TO_BRUSH_OVERLAY_GEOM = "res/glsl/canvas/brush/stroke_to_brush_overlay.geom";
+    public static final String FRONT_TO_BACKBUFFER_VERT = "res/glsl/canvas/texture/front_to_backbuffer.vert";
+    public static final String FRONT_TO_BACKBUFFER_FRAG = "res/glsl/canvas/texture/front_to_backbuffer.frag";
+    public static final String BACK_TO_FRONTBUFFER_VERT = "res/glsl/canvas/texture/back_to_frontbuffer.vert";
+    public static final String BACK_TO_FRONTBUFFER_FRAG = "res/glsl/canvas/texture/back_to_frontbuffer.frag";
     
     public static final String U_OPTIONS = "u_options";
     public static final String U_SAMPLER_2D = "u_sampler_2d";
@@ -42,6 +50,7 @@ public class Shaders {
     
     public static CommonUniforms commonUniforms;
     public static LightUniforms lightUniforms;
+    public static BrushUniforms brushUniforms;
     public static ShaderProgram texturePassthroughProgram;
     public static ShaderProgram textureLightingProgram;
     public static ShaderProgram textureShadowsProgram;
@@ -50,6 +59,9 @@ public class Shaders {
     public static ShaderProgram textureToCanvasProgram;
     public static ShaderProgram canvasBackgroundProgram;
     public static ShaderProgram canvasToScreenProgram;
+    public static ShaderProgram strokeToBrushProgram;
+    public static ShaderProgram frontToBackBufferProgram;
+    public static ShaderProgram backToFrontBufferProgram;
     
     
     public static void initialize() throws Exception {
@@ -59,6 +71,7 @@ public class Shaders {
             
             commonUniforms = new CommonUniforms();
             lightUniforms = new LightUniforms();
+            brushUniforms = new BrushUniforms();
             
             texturePassthroughProgram = new ShaderProgram(
                     io.asString(TEXTURE_PASSTHROUGH_VERT),
@@ -103,6 +116,23 @@ public class Shaders {
                     io.asString(CANVAS_TO_SCREEN_SPACE_FRAG));
             canvasToScreenProgram.createUniform(U_SAMPLER_ARRAY);
             
+            strokeToBrushProgram = new ShaderProgram(
+                    io.asString(TO_BRUSH_OVERLAY_VERT),
+                    io.asString(TO_BRUSH_OVERLAY_GEOM),
+                    io.asString(TO_BRUSH_OVERLAY_FRAG));
+            strokeToBrushProgram.createUniform(U_SAMPLER_ARRAY);
+            
+             frontToBackBufferProgram = new ShaderProgram(
+                    io.asString(FRONT_TO_BACKBUFFER_VERT),
+                    io.asString(FRONT_TO_BACKBUFFER_FRAG));
+            frontToBackBufferProgram.createUniform(U_SAMPLER_2D);
+            
+            backToFrontBufferProgram = new ShaderProgram(
+                    io.asString(BACK_TO_FRONTBUFFER_VERT),
+                    io.asString(BACK_TO_FRONTBUFFER_FRAG));
+            backToFrontBufferProgram.createUniform(U_SAMPLER_ARRAY);
+            
+            
             Logger.info("shaders initialized");
             initialized = true;
         }
@@ -114,6 +144,7 @@ public class Shaders {
             Disposable.dispose(
                     commonUniforms,
                     lightUniforms,
+                    brushUniforms,
                     texturePassthroughProgram,
                     textureLightingProgram,
                     textureShadowsProgram,
@@ -121,7 +152,10 @@ public class Shaders {
                     textureDepthMixingProgram,
                     textureToCanvasProgram,
                     canvasBackgroundProgram,
-                    canvasToScreenProgram);
+                    canvasToScreenProgram,
+                    strokeToBrushProgram,
+                    frontToBackBufferProgram,
+                    backToFrontBufferProgram);
             Logger.info("shaders disposed");
             initialized = false;
         }

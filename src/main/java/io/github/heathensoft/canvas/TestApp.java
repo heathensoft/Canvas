@@ -8,7 +8,6 @@ import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.utils.OrthographicCamera;
 import io.github.heathensoft.jlib.lwjgl.window.*;
 import org.joml.Vector2f;
-import org.joml.Vector3f;
 
 import java.nio.file.Path;
 import java.util.List;
