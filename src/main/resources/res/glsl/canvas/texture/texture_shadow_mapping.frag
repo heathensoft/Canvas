@@ -2,16 +2,23 @@
 
 layout (location=0) out vec4 f_color; // shadowmap
 
+uniform sampler2D u_sampler_2d; // depthmap
+
 in VS_OUT {
     vec2 uv;
 } fs_in;
 
-uniform sampler2D u_sampler_2d; // depthmap
 
 //********************************************************************
 // Common
 
 #define COMMON_BINDING_POINT 0
+
+struct Texture {
+    mat4 textureToWorld;
+    mat4 worldToTexture;
+    vec4 bounds;
+};
 
 struct Camera {
     mat4 combined;
@@ -22,7 +29,7 @@ struct Camera {
 
 layout (std140, binding = COMMON_BINDING_POINT) uniform CommonBlock {
     Camera camera;
-    vec4 texture_bounds;
+    Texture tex;
     vec2 mouse_world;
     float tStep;
     float amplitude;
@@ -72,15 +79,13 @@ vec4 sampleDepth(vec2 uv) {return texture(u_sampler_2d, uv);}
 
 void main() {
 
-    vec2 tex_size = vec2(texture_bounds.zw - texture_bounds.xy);
+    vec2 tex_size = vec2(tex.bounds.zw - tex.bounds.xy);
     float fragment_depth_value = sampleDepth(fs_in.uv).r;
     float fragment_z = (fragment_depth_value * 2.0 - 1) * amplitude;
-    vec2 fragment_xy = vec2(texture_bounds.xy + gl_FragCoord.xy);
+    vec2 fragment_xy = vec2(tex.bounds.xy + gl_FragCoord.xy);
     vec3 fragment_pos = vec3(fragment_xy, fragment_z);
-
     vec3 to_light_vec = vec3(light.position - fragment_pos);
     vec3 to_light_dir = normalize(to_light_vec);
-
     float cosAngle = dot(PLANE_NORMAL, to_light_dir);
     float A = abs(PI_HALF - acos(cosAngle)); // theta
     float a = amplitude - fragment_z; // dist from frag_z to top depth amp
@@ -93,7 +98,6 @@ void main() {
     float sample_delta = b / num_samples;
     vec3 move_vec = vec3(to_light_dir) * sample_delta;
     vec3 sample_pos = vec3(gl_FragCoord.xy,0.0); // z does not matter i think
-
     float shadow_add = 1.0 / num_samples;
     float shadow = 0.0;
     float sample_depth;
@@ -107,8 +111,6 @@ void main() {
             shadow += shadow_add;
         }
     }
-
-
     f_color = vec4(shadow, shadow, shadow, 1.0);
 
 }

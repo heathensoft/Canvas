@@ -1,6 +1,5 @@
 package io.github.heathensoft.canvas.brush;
 
-import io.github.heathensoft.canvas.light.PointLight;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.BufferObject;
 import io.github.heathensoft.jlib.lwjgl.graphics.Color;
@@ -34,14 +33,14 @@ public class BrushUniforms implements Disposable {
     public void upload(Brush brush) {
         uniformBuffer.bind();
         try (MemoryStack stack = MemoryStack.stackPush()){
-            FloatBuffer floatBuffer = stack.mallocFloat(4);
+            FloatBuffer floatBuffer = stack.mallocFloat(3);
             Color cColor = brush.contourColor();
-            floatBuffer.put(cColor.r).put(cColor.g).put(cColor.b).put(cColor.a);
+            floatBuffer.put(cColor.r).put(cColor.g).put(cColor.b);
             uniformBuffer.bufferSubData(floatBuffer.flip(),0);
-            IntBuffer intBuffer = stack.mallocInt(4);
-            intBuffer.put(brush.texture_size()).put(brush.function().id);
-            intBuffer.put(brush.color_value()).put(0).flip();
-            uniformBuffer.bufferSubData(intBuffer,4 * Integer.BYTES);
+            IntBuffer intBuffer = stack.mallocInt(5);
+            intBuffer.put(brush.textureSize()).put(brush.function().id);
+            intBuffer.put(brush.colorValue()).put(brush.tool().id).put(brush.shape().id);
+            uniformBuffer.bufferSubData(intBuffer.flip(),3 * Float.BYTES);
         }
     }
     

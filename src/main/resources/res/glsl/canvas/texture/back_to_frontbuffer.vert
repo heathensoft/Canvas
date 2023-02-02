@@ -9,22 +9,15 @@ out VS_OUT {
 //********************************************************************
 // Brush
 
-#define BRUSH_FUNCTION_NON 0
-#define BRUSH_FUNCTION_SET 1
-#define BRUSH_FUNCTION_ADD 2
-#define BRUSH_FUNCTION_SUB 3
-#define BRUSH_FUNCTION_MIX 4
-#define BRUSH_FUNCTION_SMO 5
-#define BRUSH_FUNCTION_SHA 6
-#define BRUSH_NUM_FUNCTIONS 7
 #define BRUSH_BINDING_POINT 2
 
 struct Brush {
-    vec4 contour_color;
+    vec3 contour_color;
     int texture_size;
     int function;
     int color_value;
-    int std140_padding;
+    int tool;
+    int shape;
 };
 
 layout (std140, binding = BRUSH_BINDING_POINT) uniform BrushBlock {

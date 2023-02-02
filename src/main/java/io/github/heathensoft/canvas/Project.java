@@ -1,6 +1,5 @@
 package io.github.heathensoft.canvas;
 
-import io.github.heathensoft.canvas.brush.Channel;
 import io.github.heathensoft.canvas.io.PngExporter;
 import io.github.heathensoft.canvas.io.PngImporter;
 import io.github.heathensoft.jlib.common.Disposable;
@@ -26,18 +25,20 @@ import static org.lwjgl.opengl.GL11.GL_NEAREST;
  */
 
 
-public class Project implements Disposable {
+public class Project implements Disposable, Comparable<Project> {
     
     private final int project_id;
     private String project_name;
     private final Vector4f bounds;
-    private final Texture color_source;
+    private final Texture colorSource;
+    private final Framebuffer brushOverlayBuffer;
     private final Framebuffer depthBuffer;
     private final Framebuffer shadowBuffer;
     private final Framebuffer normalsBuffer;
     private final Framebuffer previewBuffer;
     private final Framebuffer frontBuffer;
     private final Framebuffer backBuffer;
+    private final UndoRedoManager undoRedoManager;
     
     Project(PngImporter.Textures sources, int id) throws Exception {
         this(default_project_name(),sources,id);
@@ -45,8 +46,9 @@ public class Project implements Disposable {
     
     Project(String name, PngImporter.Textures sources, int id) throws Exception {
         
-        color_source = sources.color_source();
+        colorSource = sources.color_source();
         bounds = new Vector4f(0.0f,0.0f,texturesWidth(),texturesHeight());
+        undoRedoManager = new UndoRedoManager(this);
     
         Texture front_buffer_details = sources.front_buffer_details();
         Texture front_buffer_volume = sources.front_buffer_volume();
@@ -61,22 +63,22 @@ public class Project implements Disposable {
     
         frontBuffer = new Framebuffer(texturesWidth(),texturesHeight());
         Framebuffer.bind(frontBuffer);
-        Framebuffer.attachColor(front_buffer_details, Channel.DETAILS.idx,true);
-        Framebuffer.attachColor(front_buffer_volume, Channel.VOLUME.idx,true);
-        Framebuffer.attachColor(front_buffer_specular,Channel.SPECULAR.idx,true);
-        Framebuffer.attachColor(front_buffer_emissive,Channel.EMISSIVE.idx,true);
-        Framebuffer.drawBuffers(Channel.DETAILS.idx,Channel.VOLUME.idx,Channel.SPECULAR.idx,Channel.EMISSIVE.idx);
+        Framebuffer.attachColor(front_buffer_details, Channel.DETAILS.id,true);
+        Framebuffer.attachColor(front_buffer_volume, Channel.VOLUME.id,true);
+        Framebuffer.attachColor(front_buffer_specular,Channel.SPECULAR.id,true);
+        Framebuffer.attachColor(front_buffer_emissive,Channel.EMISSIVE.id,true);
+        Framebuffer.drawBuffers(Channel.DETAILS.id,Channel.VOLUME.id,Channel.SPECULAR.id,Channel.EMISSIVE.id);
         Framebuffer.checkStatus();
     
         //***********************************************************************************************************
     
         backBuffer = new Framebuffer(texturesWidth(),texturesHeight());
         Framebuffer.bind(backBuffer);
-        Framebuffer.attachColor(back_buffer_details,Channel.DETAILS.idx,true);
-        Framebuffer.attachColor(back_buffer_volume,Channel.VOLUME.idx,true);
-        Framebuffer.attachColor(back_buffer_specular,Channel.SPECULAR.idx,true);
-        Framebuffer.attachColor(back_buffer_emissive,Channel.EMISSIVE.idx,true);
-        Framebuffer.drawBuffers(Channel.DETAILS.idx,Channel.VOLUME.idx,Channel.SPECULAR.idx,Channel.EMISSIVE.idx);
+        Framebuffer.attachColor(back_buffer_details,Channel.DETAILS.id,true);
+        Framebuffer.attachColor(back_buffer_volume,Channel.VOLUME.id,true);
+        Framebuffer.attachColor(back_buffer_specular,Channel.SPECULAR.id,true);
+        Framebuffer.attachColor(back_buffer_emissive,Channel.EMISSIVE.id,true);
+        Framebuffer.drawBuffers(Channel.DETAILS.id,Channel.VOLUME.id,Channel.SPECULAR.id,Channel.EMISSIVE.id);
         Framebuffer.checkStatus();
         
         //***********************************************************************************************************
@@ -137,6 +139,20 @@ public class Project implements Disposable {
         Framebuffer.checkStatus();
     
         //***********************************************************************************************************
+        
+        Texture brushOVL = Texture.generate2D(texturesWidth(),texturesHeight());
+        brushOVL.bindToActiveSlot();
+        brushOVL.allocate(TextureFormat.R8_UNSIGNED_NORMALIZED,false);
+        brushOVL.filter(GL_NEAREST,GL_NEAREST);
+        brushOVL.clampToBorder();
+    
+        brushOverlayBuffer = new Framebuffer(texturesWidth(),texturesHeight());
+        Framebuffer.bind(brushOverlayBuffer);
+        Framebuffer.attachColor(brushOVL,0,true);
+        Framebuffer.drawBuffer(0);
+        Framebuffer.checkStatus();
+    
+        //***********************************************************************************************************
     
         project_name = name;
         project_id = id;
@@ -147,13 +163,13 @@ public class Project implements Disposable {
         Texture preview =               previewBuffer.texture(0);
         Texture depth_map =             depthBuffer.texture(0);
         Texture normal_map =            normalsBuffer.texture(0);
-        Texture back_buffer_details =   backBuffer.texture(Channel.DETAILS.idx);
-        Texture back_buffer_volume =    backBuffer.texture(Channel.VOLUME.idx);
-        Texture back_buffer_specular =  backBuffer.texture(Channel.SPECULAR.idx);
-        Texture back_buffer_emissive =  backBuffer.texture(Channel.EMISSIVE.idx);
+        Texture back_buffer_details =   backBuffer.texture(Channel.DETAILS.id);
+        Texture back_buffer_volume =    backBuffer.texture(Channel.VOLUME.id);
+        Texture back_buffer_specular =  backBuffer.texture(Channel.SPECULAR.id);
+        Texture back_buffer_emissive =  backBuffer.texture(Channel.EMISSIVE.id);
     
         PngExporter exporter = new PngExporter(output_directory,project_name);
-        exporter.exportColor(color_source,overwrite);
+        exporter.exportColor(colorSource,overwrite);
         exporter.exportPreview(preview,overwrite);
         exporter.exportDepth(depth_map,overwrite);
         exporter.exportNormals(normal_map,overwrite);
@@ -169,6 +185,14 @@ public class Project implements Disposable {
     
     public void viewport() {
         Engine.get().window().viewport().set(0,0,texturesWidth(),texturesHeight());
+    }
+    
+    public UndoRedoManager undoRedoManager() {
+        return undoRedoManager;
+    }
+    
+    public Framebuffer brushOverlayBuffer() {
+        return brushOverlayBuffer;
     }
     
     public Framebuffer depthBuffer() {
@@ -196,7 +220,7 @@ public class Project implements Disposable {
     }
     
     public Texture colorSourceTexture() {
-        return color_source;
+        return colorSource;
     }
     
     public int projectID() {
@@ -216,22 +240,24 @@ public class Project implements Disposable {
     }
     
     public int texturesWidth() {
-        return color_source.width();
+        return colorSource.width();
     }
     
     public int texturesHeight() {
-        return color_source.height();
+        return colorSource.height();
     }
     
     public void dispose() {
         Disposable.dispose(
-                color_source,
+                colorSource,
                 depthBuffer,
                 shadowBuffer,
                 normalsBuffer,
                 previewBuffer,
                 frontBuffer,
-                backBuffer
+                backBuffer,
+                brushOverlayBuffer,
+                undoRedoManager
         );
     }
     
@@ -241,5 +267,10 @@ public class Project implements Disposable {
     
     public static String default_project_name() {
         return "untitled";
+    }
+    
+    
+    public int compareTo(Project o) {
+        return Integer.compare(o.project_id,project_id);
     }
 }

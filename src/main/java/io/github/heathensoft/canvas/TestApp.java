@@ -1,5 +1,6 @@
 package io.github.heathensoft.canvas;
 
+import io.github.heathensoft.canvas.brush.Brush;
 import io.github.heathensoft.canvas.io.PngImporter;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.io.External;
@@ -44,7 +45,7 @@ public class TestApp extends Application {
         mouse_position = new Vector2f();
     
         External external = new External(External.USER_HOME("desktop"));
-        Path texturePath = external.path().resolve("someShape.png");
+        Path texturePath = external.path().resolve("Ritual.png");
     
         PngImporter importer = new PngImporter();
         importer.importColorImage(texturePath);
@@ -59,6 +60,7 @@ public class TestApp extends Application {
         renderer = new RenderTest(splitScreen,project);
         Input.initialize();
         glDisable(GL_DEPTH_TEST);
+        
     }
     
     protected void on_update(float delta) {
@@ -74,11 +76,22 @@ public class TestApp extends Application {
         if (keyboard.just_pressed(GLFW_KEY_KP_SUBTRACT)) canvasGrid.decrementSize();
     
         if (mouse.scrolled()) {
+            
             float amount = mouse.get_scroll();
-            current_zoom -= amount;
-            int pow = (int) current_zoom;
-            camera.zoom = (float) Math.pow(2,pow);
-            System.out.println("zoom: " + camera.zoom);
+            if (keyboard.pressed(GLFW_KEY_LEFT_CONTROL)) {
+                renderer.light.position().z -= (amount * 5.0f);
+                if (renderer.light.position().z < renderer.depth_amplitude) {
+                    renderer.light.position().z = renderer.depth_amplitude;
+                }
+            } else {
+                current_zoom -= amount;
+                System.out.println("current zoom: " + current_zoom);
+                int pow = (int) current_zoom;
+                camera.zoom = (float) Math.pow(2,pow);
+                System.out.println("camera zoom: " + camera.zoom);
+                System.out.println(camera.zoom * 512);
+            }
+            
         }
     
         if (mouse.is_dragging(Mouse.WHEEL)) {
@@ -93,6 +106,11 @@ public class TestApp extends Application {
         if(mouse.button_pressed(Mouse.RIGHT)) {
             float z = renderer.light.position().z;
             renderer.light.position().set(mouse_position.x,mouse_position.y,z);
+        }
+    
+        if (keyboard.just_pressed(GLFW_KEY_L)) {
+            //renderer.show_normals = ! renderer.show_normals;
+        
         }
         
         if (keyboard.just_pressed(GLFW_KEY_S)) {
@@ -111,6 +129,11 @@ public class TestApp extends Application {
     }
     
     protected void on_exit() {
+        try {
+            renderer.project.save(External.USER_HOME("desktop","f"),true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Disposable.dispose(renderer);
     }
     

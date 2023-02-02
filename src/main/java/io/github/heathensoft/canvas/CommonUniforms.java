@@ -2,6 +2,7 @@ package io.github.heathensoft.canvas;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.BufferObject;
+import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.utils.OrthographicCamera;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
@@ -23,7 +24,7 @@ import static org.lwjgl.opengl.GL31.GL_UNIFORM_BUFFER;
 public class CommonUniforms implements Disposable {
     
     public static final int BINDING_POINT = 0;
-    public static final int STRUCT_SIZE_FLOAT = 44;
+    public static final int STRUCT_SIZE_FLOAT = 76;
     private final BufferObject uniformBuffer;
     
     public CommonUniforms() {
@@ -40,10 +41,19 @@ public class CommonUniforms implements Disposable {
             float tStep,
             float amplitude) {
         
+        float texture_w = texture_bounds.z - texture_bounds.x;
+        float texture_h = texture_bounds.w - texture_bounds.y;
+        Matrix4f textureToWorld = MathLib.mat4().identity();
+        textureToWorld.translate(texture_bounds.x,texture_bounds.y,0);
+        textureToWorld.scale(texture_w,texture_h,1);
+        Matrix4f worldToTexture = MathLib.mat4().identity();
+        worldToTexture.set(textureToWorld).invert();
         uniformBuffer.bind();
         try (MemoryStack stack = MemoryStack.stackPush()){
             FloatBuffer buffer = stack.mallocFloat(STRUCT_SIZE_FLOAT);
             put(camera,buffer);
+            put(textureToWorld,buffer);
+            put(worldToTexture,buffer);
             put(texture_bounds,buffer);
             put(mouse,buffer);
             buffer.put(tStep).put(amplitude);

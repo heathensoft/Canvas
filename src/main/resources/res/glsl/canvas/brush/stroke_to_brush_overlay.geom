@@ -12,6 +12,12 @@ out GS_OUT {
 
 #define COMMON_BINDING_POINT 0
 
+struct Texture {
+    mat4 textureToWorld;
+    mat4 worldToTexture;
+    vec4 bounds;
+};
+
 struct Camera {
     mat4 combined;
     mat4 combined_inv;
@@ -21,7 +27,7 @@ struct Camera {
 
 layout (std140, binding = COMMON_BINDING_POINT) uniform CommonBlock {
     Camera camera;
-    vec4 texture_bounds;
+    Texture tex;
     vec2 mouse_world;
     float tStep;
     float amplitude;
@@ -33,11 +39,12 @@ layout (std140, binding = COMMON_BINDING_POINT) uniform CommonBlock {
 #define BRUSH_BINDING_POINT 2
 
 struct Brush {
-    vec4 contour_color;
+    vec3 contour_color;
     int texture_size;
     int function;
     int color_value;
-    int std140_padding;
+    int tool;
+    int shape;
 };
 
 layout (std140, binding = BRUSH_BINDING_POINT) uniform BrushBlock {
@@ -46,11 +53,17 @@ layout (std140, binding = BRUSH_BINDING_POINT) uniform BrushBlock {
 
 //********************************************************************
 
+vec2 uv_to_ndc(vec2 uv) {
+    float x = uv.x * 2 - 1;
+    float y = uv.y * 2 - 1;
+    return vec2(x,y);
+}
+
 const vec2 offset_uv[4] = {
-vec2(-1.0, -1.0),
-vec2(1.0, -1.0),
-vec2(-1.0, 1.0),
-vec2(1.0, 1.0)
+    vec2(0.0,0.0),
+    vec2(1.0,0.0),
+    vec2(0.0,1.0),
+    vec2(1.0,1.0)
 };
 
 void main() {
@@ -58,17 +71,18 @@ void main() {
     float bs = float(brush.texture_size);
 
     vec4 offset_pos[4] = {
-    vec4(0.0, 0.0, 0.0, 0.0),
-    vec4(bs, 0.0, 0.0, 0.0),
-    vec4(0.0, bs, 0.0, 0.0),
-    vec4(bs, bs, 0.0, 0.0)
+        vec4(0.0, 0.0, 0.0, 0.0),
+        vec4(bs,  0.0, 0.0, 0.0),
+        vec4(0.0, bs,  0.0, 0.0),
+        vec4(bs,  bs,  0.0, 0.0)
     };
 
     vec4 bottom_left = gl_in[0].gl_Position;
 
     for(int i = 0; i < 4; i++) {
         vec4 corner = bottom_left + offset_pos[i];
-        gl_Position = camera.combined * corner;
+        vec2 tex_position = vec4(tex.worldToTexture * corner).xy;
+        gl_Position = vec4(uv_to_ndc(tex_position),0.0,1.0);
         gs_out.brush_uv = offset_uv[i];
         EmitVertex();
     }

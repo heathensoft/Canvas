@@ -1,6 +1,7 @@
 package io.github.heathensoft.canvas;
 
-import io.github.heathensoft.canvas.brush.Channel;
+import io.github.heathensoft.canvas.brush.Brush;
+import io.github.heathensoft.canvas.brush.StrokeRenderBuffer;
 import io.github.heathensoft.canvas.light.Attenuation;
 import io.github.heathensoft.canvas.light.PointLight;
 import io.github.heathensoft.jlib.common.Disposable;
@@ -34,14 +35,17 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class RenderTest implements Disposable {
     
-    private final float depth_amplitude = 8.0f;
+    public final float depth_amplitude = 8.0f;
     private int preview_options = 4 + 8 + 16;
     
+    public Channel channel;
+    public Brush brush;
     public Project project;
     public PointLight light;
     public CanvasGrid canvasGrid;
     public SplitScreen splitScreen;
     public CanvasBackground background;
+    public StrokeRenderBuffer strokeRenderBuffer;
     
     public RenderTest(SplitScreen splitScreen, Project project) throws Exception {
         Shaders.initialize();
@@ -53,10 +57,20 @@ public class RenderTest implements Disposable {
         this.background = new CanvasBackground();
         this.light = new PointLight(
                 new Vector3f(0,16,20),
-                new Color(0.93f,0.95f,0.970f,1.0f),
-                Attenuation.ATT_325,
-                0.7f,
-                0.4f);
+                new Color(0.99f,0.99f,0.99f,1.0f),
+                Attenuation.ATT_3250,
+                0.8f,
+                0.6f);
+        
+        this.strokeRenderBuffer = new StrokeRenderBuffer(8);
+        this.brush = new Brush(
+                Brush.Shape.ROUND,
+                Brush.Tool.FREE_HAND,
+                Brush.Function.MIX,
+                16
+        );
+        
+        this.channel = Channel.DETAILS;
         
     }
     
@@ -67,10 +81,14 @@ public class RenderTest implements Disposable {
         
         splitScreen.camera().refresh();
         
-        Texture tex_detail = project.frontBuffer().texture(Channel.DETAILS.idx);
-        Texture tex_volume = project.frontBuffer().texture(Channel.VOLUME.idx);
-        Texture tex_specular = project.frontBuffer().texture(Channel.SPECULAR.idx);
-        Texture tex_emissive = project.frontBuffer().texture(Channel.EMISSIVE.idx);
+        // using volume for backbuffer
+        Texture tex_back = project.backBuffer().texture(Channel.VOLUME.id);
+        
+        Texture tex_brush_overlay = project.brushOverlayBuffer().texture(0);
+        Texture tex_detail = project.frontBuffer().texture(Channel.DETAILS.id);
+        Texture tex_volume = project.frontBuffer().texture(Channel.VOLUME.id);
+        Texture tex_specular = project.frontBuffer().texture(Channel.SPECULAR.id);
+        Texture tex_emissive = project.frontBuffer().texture(Channel.EMISSIVE.id);
         Texture tex_preview = project.previewBuffer().texture(0);
         Texture tex_normals = project.normalsBuffer().texture(0);
         Texture tex_shadows = project.shadowBuffer().texture(0);
@@ -81,6 +99,7 @@ public class RenderTest implements Disposable {
         
         // UPLOAD UNIFORMS
         
+        brushUniforms.upload(brush);
         lightUniforms.upload(light);
         commonUniforms.upload(
                 splitScreen.camera(),
@@ -92,8 +111,48 @@ public class RenderTest implements Disposable {
         
         project.viewport();
         glDisable(GL_BLEND);
-        
+    
         //************************************************************************
+    
+        //TO BRUSH OVERLAY
+        
+        Framebuffer.bindDraw(project.brushOverlayBuffer());
+        Framebuffer.clear();
+        strokeToBrushProgram.use();
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(2);
+            buffer.put(0).put(1).flip();
+            strokeToBrushProgram.setUniform1iv(U_SAMPLER_ARRAY,buffer);
+            brush.texture().bindToSlot(0);
+            tex_color.bindToSlot(1);
+        }
+        
+        int p_x = (int)(mouse_world.x - brush.textureSize() / 2f);
+        int p_y = (int)(mouse_world.y - brush.textureSize() / 2f);
+        
+        strokeRenderBuffer.put(p_x,p_y);
+        strokeRenderBuffer.upload();
+    
+        //************************************************************************
+    
+        // BACK TO FRONT (USING BRUSH OVERLAY)
+    
+        Framebuffer.bindDraw(project.frontBuffer());
+        Framebuffer.drawBuffer(Channel.VOLUME.id);
+        backToFrontBufferProgram.use();
+    
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(2);
+            buffer.put(0).put(1).flip();
+            backToFrontBufferProgram.setUniform1iv(U_SAMPLER_ARRAY,buffer);
+            tex_back.bindToSlot(0);
+            tex_brush_overlay.bindToSlot(1);
+        }
+        
+        TSpaceVTXBuffer.transferElements();
+    
+        //************************************************************************
+        
         
         //DEPTH MIXING
         
@@ -101,7 +160,7 @@ public class RenderTest implements Disposable {
         //Framebuffer.clear();
         
         textureDepthMixingProgram.use();
-        textureDepthMixingProgram.setUniform1f(U_DETAIL_WEIGHT,0.5f);
+        textureDepthMixingProgram.setUniform1f(U_DETAIL_WEIGHT,0.99f);
     
         try (MemoryStack stack = MemoryStack.stackPush()){
             IntBuffer buffer = stack.mallocInt(2);
@@ -157,7 +216,7 @@ public class RenderTest implements Disposable {
         textureLightingProgram.use();
         textureLightingProgram.setUniform1i(U_OPTIONS,preview_options);
         textureLightingProgram.setUniform1i(U_SAMPLER_3D,6);
-        ColorPalette.get("bright_future").texture().bindToSlot(6);
+        ColorPalette.get("nanner").texture().bindToSlot(6);
         // upload palette here
         try (MemoryStack stack = MemoryStack.stackPush()){
             IntBuffer buffer = stack.mallocInt(6);
@@ -187,9 +246,10 @@ public class RenderTest implements Disposable {
         
         splitScreen.setDrawBuffersBoth();
         splitScreen.drawToSplitScreen(
-                tex_depth,
+                tex_volume,
                 tex_preview,
-                tex_color
+                tex_color,
+                tex_brush_overlay
         );
         
         splitScreen.setDrawBufferLeft();
@@ -220,7 +280,9 @@ public class RenderTest implements Disposable {
                 background,
                 splitScreen,
                 project,
-                canvasGrid
+                canvasGrid,
+                brush,
+                strokeRenderBuffer
         );
     }
 }

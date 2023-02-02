@@ -20,6 +20,8 @@ import java.util.Map;
 
 public class ColorPalette implements Disposable {
     
+    public static final String DEFAULT = "bright_future";
+    
     private static final int TEXTURE_SIZE = 64;
     private static final String UNTITLED = "untitled";
     private static final String PALETTE_RESOURCE_DIRECTORY = "res/palettes";
@@ -27,6 +29,11 @@ public class ColorPalette implements Disposable {
     
     private final String name;
     private final Texture texture;
+    
+    
+    public ColorPalette(List<Color> colors) {
+        this(null,colors);
+    }
     
     public ColorPalette(String name, List<Color> colors) {
         if (colors.isEmpty()) colors.add(Color.WHITE.cpy());
@@ -72,7 +79,6 @@ public class ColorPalette implements Disposable {
             List<ColorPalette> list = new ArrayList<>(palettes.values());
             for (ColorPalette palette : list) palette.dispose();
         }
-        
     }
     
     public static void loadResources() throws IOException {

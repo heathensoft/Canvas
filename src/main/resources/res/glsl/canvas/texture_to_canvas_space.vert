@@ -12,6 +12,12 @@ out VS_OUT {
 
 #define COMMON_BINDING_POINT 0
 
+struct Texture {
+    mat4 textureToWorld;
+    mat4 worldToTexture;
+    vec4 bounds;
+};
+
 struct Camera {
     mat4 combined;
     mat4 combined_inv;
@@ -21,7 +27,7 @@ struct Camera {
 
 layout (std140, binding = COMMON_BINDING_POINT) uniform CommonBlock {
     Camera camera;
-    vec4 texture_bounds;
+    Texture tex;
     vec2 mouse_world;
     float tStep;
     float amplitude;
@@ -35,8 +41,8 @@ vec2 uv_to_ndc(vec2 uv);
 
 void main() {
 
-    vec2 tex_pos_offset = vec2(texture_bounds.xy);
-    vec2 tex_size = vec2(texture_bounds.zw) - tex_pos_offset;
+    vec2 tex_pos_offset = vec2(tex.bounds.xy);
+    vec2 tex_size = vec2(tex.bounds.zw) - tex_pos_offset;
     vec2 tex_uv = a_uv;
     vec2 tex_pos = tex_uv * tex_size + tex_pos_offset;
     vec4 position = vec4(tex_pos,0.0,1.0);

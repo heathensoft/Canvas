@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas.old.rendering;
+package io.github.heathensoft.canvas.brush;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.Area;
@@ -79,6 +79,6 @@ public class RectRenderBuffer implements Disposable {
     
     @Override
     public void dispose() {
-        Disposable.dispose(vertexArrayObject,vertexBuffer);
+        Disposable.dispose(vertexArrayObject,vertexBuffer,indexBuffer);
     }
 }

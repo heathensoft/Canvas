@@ -31,22 +31,24 @@ public class Shaders {
     public static final String CANVAS_TO_SCREEN_SPACE_FRAG = "res/glsl/canvas/canvas_to_screen_space.frag";
     public static final String CANVAS_BACKGROUND_VERT = "res/glsl/canvas/canvas_background.vert";
     public static final String CANVAS_BACKGROUND_FRAG = "res/glsl/canvas/canvas_background.frag";
-    public static final String TO_BRUSH_OVERLAY_VERT = "res/glsl/canvas/brush/stroke_to_brush_overlay.vert";
-    public static final String TO_BRUSH_OVERLAY_FRAG = "res/glsl/canvas/brush/stroke_to_brush_overlay.frag";
-    public static final String TO_BRUSH_OVERLAY_GEOM = "res/glsl/canvas/brush/stroke_to_brush_overlay.geom";
+    public static final String STROKE_TO_BRUSH_OVERLAY_VERT = "res/glsl/canvas/brush/stroke_to_brush_overlay.vert";
+    public static final String STROKE_TO_BRUSH_OVERLAY_FRAG = "res/glsl/canvas/brush/stroke_to_brush_overlay.frag";
+    public static final String STROKE_TO_BRUSH_OVERLAY_GEOM = "res/glsl/canvas/brush/stroke_to_brush_overlay.geom";
+    public static final String AREA_TO_BRUSH_OVERLAY_VERT = "res/glsl/canvas/brush/area_to_brush_overlay.vert";
+    public static final String AREA_TO_BRUSH_OVERLAY_FRAG = "res/glsl/canvas/brush/area_to_brush_overlay.frag";
     public static final String FRONT_TO_BACKBUFFER_VERT = "res/glsl/canvas/texture/front_to_backbuffer.vert";
     public static final String FRONT_TO_BACKBUFFER_FRAG = "res/glsl/canvas/texture/front_to_backbuffer.frag";
     public static final String BACK_TO_FRONTBUFFER_VERT = "res/glsl/canvas/texture/back_to_frontbuffer.vert";
     public static final String BACK_TO_FRONTBUFFER_FRAG = "res/glsl/canvas/texture/back_to_frontbuffer.frag";
     
-    public static final String U_OPTIONS = "u_options";
-    public static final String U_SAMPLER_2D = "u_sampler_2d";
-    public static final String U_SAMPLER_3D = "u_sampler_3d";
-    public static final String U_SAMPLER_ARRAY = "u_sampler_array";
-    public static final String U_DETAIL_WEIGHT = "u_detail_weight";
+    public static final String U_OPTIONS = "u_options";                 // int
+    public static final String U_SAMPLER_2D = "u_sampler_2d";           // int
+    public static final String U_SAMPLER_3D = "u_sampler_3d";           // int
+    public static final String U_SAMPLER_ARRAY = "u_sampler_array";     // int[]
+    public static final String U_DETAIL_WEIGHT = "u_detail_weight";     // float
+    public static final String U_DRAG_AREA = "u_drag_area";             // vec4
     
     private static boolean initialized;
-    
     
     public static CommonUniforms commonUniforms;
     public static LightUniforms lightUniforms;
@@ -60,6 +62,7 @@ public class Shaders {
     public static ShaderProgram canvasBackgroundProgram;
     public static ShaderProgram canvasToScreenProgram;
     public static ShaderProgram strokeToBrushProgram;
+    public static ShaderProgram areaToBrushProgram;
     public static ShaderProgram frontToBackBufferProgram;
     public static ShaderProgram backToFrontBufferProgram;
     
@@ -117,10 +120,16 @@ public class Shaders {
             canvasToScreenProgram.createUniform(U_SAMPLER_ARRAY);
             
             strokeToBrushProgram = new ShaderProgram(
-                    io.asString(TO_BRUSH_OVERLAY_VERT),
-                    io.asString(TO_BRUSH_OVERLAY_GEOM),
-                    io.asString(TO_BRUSH_OVERLAY_FRAG));
+                    io.asString(STROKE_TO_BRUSH_OVERLAY_VERT),
+                    io.asString(STROKE_TO_BRUSH_OVERLAY_GEOM),
+                    io.asString(STROKE_TO_BRUSH_OVERLAY_FRAG));
             strokeToBrushProgram.createUniform(U_SAMPLER_ARRAY);
+    
+            areaToBrushProgram = new ShaderProgram(
+                    io.asString(AREA_TO_BRUSH_OVERLAY_VERT),
+                    io.asString(AREA_TO_BRUSH_OVERLAY_FRAG));
+            areaToBrushProgram.createUniform(U_DRAG_AREA);
+            areaToBrushProgram.createUniform(U_SAMPLER_2D);
             
              frontToBackBufferProgram = new ShaderProgram(
                     io.asString(FRONT_TO_BACKBUFFER_VERT),
@@ -154,6 +163,7 @@ public class Shaders {
                     canvasBackgroundProgram,
                     canvasToScreenProgram,
                     strokeToBrushProgram,
+                    areaToBrushProgram,
                     frontToBackBufferProgram,
                     backToFrontBufferProgram);
             Logger.info("shaders disposed");

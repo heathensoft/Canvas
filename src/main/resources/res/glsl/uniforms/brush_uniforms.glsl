@@ -20,7 +20,7 @@ struct Brush {
     int texture_size;
     int function;
     int color_value;
-    int std140_padding;
+    int tool;
 };
 
 layout (std140, binding = BRUSH_BINDING_POINT) uniform BrushBlock {

@@ -2,18 +2,24 @@
 
 layout (location=0) out vec4 f_color; // preview
 
-in VS_OUT {
-    vec2 uv;
-} fs_in;
-
 uniform sampler2D[6] u_sampler_array;
 uniform sampler3D u_sampler_3d;
 uniform int u_options;
+
+in VS_OUT {
+    vec2 uv;
+} fs_in;
 
 //********************************************************************
 // Common
 
 #define COMMON_BINDING_POINT 0
+
+struct Texture {
+    mat4 textureToWorld;
+    mat4 worldToTexture;
+    vec4 bounds;
+};
 
 struct Camera {
     mat4 combined;
@@ -24,10 +30,10 @@ struct Camera {
 
 layout (std140, binding = COMMON_BINDING_POINT) uniform CommonBlock {
     Camera camera;
-    vec4 texture_bounds;
+    Texture tex;
     vec2 mouse_world;
     float tStep;
-    float amplitude; // depth amplitude
+    float amplitude;
 };
 
 //********************************************************************
@@ -141,7 +147,7 @@ void main() {
             vec3 fragment_normal = normalize(fetchNormal(texel).xyz * 2.0 - 1);
 
             float fragment_z = (fetchDepth(texel).r * 2.0 - 1) * amplitude;
-            vec2 fragment_xy = vec2(texture_bounds.xy + gl_FragCoord.xy);
+            vec2 fragment_xy = vec2(tex.bounds.xy + gl_FragCoord.xy);
             vec3 fragment_position = vec3(fragment_xy, fragment_z);
 
             vec3 camera_position = vec3(camera.position.xy, CAMERA_VIRTUAL_Z * camera.zoom);

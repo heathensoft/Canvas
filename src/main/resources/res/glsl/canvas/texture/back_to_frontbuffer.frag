@@ -4,11 +4,11 @@
 
 layout (location=0) out vec4 f_color; // current channel front
 
+uniform sampler2D[2] u_sampler_array;
+
 in VS_OUT {
     float brush_color;
 } fs_in;
-
-uniform sampler2D[2] u_sampler_array;
 
 sampler2D backBufferSampler() { return u_sampler_array[0]; }
 sampler2D brushOverlaySampler() { return u_sampler_array[1]; }
@@ -20,6 +20,12 @@ float fetchBrushOverlayRed(ivec2 texel) { return texelFetch(brushOverlaySampler(
 
 #define COMMON_BINDING_POINT 0
 
+struct Texture {
+    mat4 textureToWorld;
+    mat4 worldToTexture;
+    vec4 bounds;
+};
+
 struct Camera {
     mat4 combined;
     mat4 combined_inv;
@@ -29,7 +35,7 @@ struct Camera {
 
 layout (std140, binding = COMMON_BINDING_POINT) uniform CommonBlock {
     Camera camera;
-    vec4 texture_bounds;
+    Texture tex;
     vec2 mouse_world;
     float tStep;
     float amplitude;
@@ -37,6 +43,11 @@ layout (std140, binding = COMMON_BINDING_POINT) uniform CommonBlock {
 
 //********************************************************************
 // Brush
+
+#define BRUSH_TOOL_SAMPLER 0
+#define BRUSH_TOOL_FREE_HAND 1
+#define BRUSH_TOOL_LINE_DRAW 2
+#define BRUSH_TOOL_DRAG 3
 
 #define BRUSH_FUNCTION_NON 0
 #define BRUSH_FUNCTION_SET 1
@@ -46,14 +57,16 @@ layout (std140, binding = COMMON_BINDING_POINT) uniform CommonBlock {
 #define BRUSH_FUNCTION_SMO 5
 #define BRUSH_FUNCTION_SHA 6
 #define BRUSH_NUM_FUNCTIONS 7
+
 #define BRUSH_BINDING_POINT 2
 
 struct Brush {
-    vec4 contour_color;
+    vec3 contour_color;
     int texture_size;
     int function;
     int color_value;
-    int std140_padding;
+    int tool;
+    int shape;
 };
 
 layout (std140, binding = BRUSH_BINDING_POINT) uniform BrushBlock {
@@ -70,7 +83,7 @@ const float[9] SMOOTHEN_KERNEL = {
 
 const float[9] SHARPEN_KERNEL = {
 -0.250, -1.000, -0.250,
--1.000,  5.0000,-1.000,
+-1.000,  6.0000,-1.000,
 -0.250, -1.000, -0.250
 };
 
@@ -81,7 +94,7 @@ void main() {
     float back_buffer_red = fetchBackBufferRed(texel);
     float final_color = 0.0;
 
-    if(brush_overlay_red == 1.0) {
+    if(brush_overlay_red == 1.0 && brush.tool != BRUSH_TOOL_SAMPLER) {
 
         float brush_color_red = fs_in.brush_color;
         int function = brush.function >= BRUSH_NUM_FUNCTIONS ||
@@ -109,7 +122,7 @@ void main() {
 
         } else{
 
-            float[9] kernel;
+            float[9] kernel = SMOOTHEN_KERNEL;
 
             ivec2 adjacent[9] = {
             ivec2(-1, 1), ivec2(0, 1), ivec2(1, 1),

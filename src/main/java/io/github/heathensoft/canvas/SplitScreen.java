@@ -133,23 +133,25 @@ public class SplitScreen implements Disposable {
             canvasToScreenProgram.setUniform1iv(U_SAMPLER_ARRAY,buffer);
             leftTexture().bindToSlot(0);
             rightTexture().bindToSlot(1);
+            // brushOverlayCanvas bind 2
         } vertexArrayObject.bind();
         glDrawElementsInstanced(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0,2);
     }
     
     
-    public void drawToSplitScreen(Texture canvasTexture, Texture previewTexture, Texture colorSource) {
+    public void drawToSplitScreen(Texture canvasTexture, Texture previewTexture, Texture colorSource, Texture brushOverlay) {
         // use: bind this framebuffer and draw to both
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         textureToCanvasProgram.use();
         try (MemoryStack stack = MemoryStack.stackPush()){
-            IntBuffer buffer = stack.mallocInt(3);
-            buffer.put(0).put(1).put(2).flip();
+            IntBuffer buffer = stack.mallocInt(4);
+            buffer.put(0).put(1).put(2).put(3).flip();
             textureToCanvasProgram.setUniform1iv(U_SAMPLER_ARRAY,buffer);
             canvasTexture.bindToSlot(0);
             previewTexture.bindToSlot(1);
             colorSource.bindToSlot(2);
+            brushOverlay.bindToSlot(3);
         } vertexArrayObject.bind();
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0);
     }

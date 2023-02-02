@@ -19,8 +19,12 @@ public class PointLight {
     private float diffuse;
     private float ambience;
     
+    public PointLight() {
+        this(new Vector3f(),Color.WHITE);
+    }
+    
     public PointLight(Vector3f position, Color color) {
-        this(position,color,Attenuation.ATT_65,0.5f,0.5f);
+        this(position,color,Attenuation.ATT_600,0.5f,0.4f);
     }
     
     public PointLight(Vector3f position, Color color, Attenuation attenuation, float diffuse, float ambience) {

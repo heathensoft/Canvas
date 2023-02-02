@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas.old.rendering;
+package io.github.heathensoft.canvas.brush;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.BufferObject;
@@ -19,7 +19,7 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
  */
 
 
-public class BrushRenderBuffer implements Disposable {
+public class StrokeRenderBuffer implements Disposable {
 
     private final Vao vertexArrayObject;
     private final BufferObject vertexBuffer;
@@ -28,7 +28,7 @@ public class BrushRenderBuffer implements Disposable {
     private int count;
     
     
-    public BrushRenderBuffer(int vertex_capacity) {
+    public StrokeRenderBuffer(int vertex_capacity) {
         this.vertex_capacity = vertex_capacity;
         this.vertices = MemoryUtil.memAllocFloat(vertex_capacity * 2);
         this.vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW);

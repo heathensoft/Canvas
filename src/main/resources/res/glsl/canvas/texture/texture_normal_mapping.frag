@@ -9,6 +9,12 @@ uniform sampler2D[2] u_sampler_array;
 
 #define COMMON_BINDING_POINT 0
 
+struct Texture {
+    mat4 textureToWorld;
+    mat4 worldToTexture;
+    vec4 bounds;
+};
+
 struct Camera {
     mat4 combined;
     mat4 combined_inv;
@@ -18,7 +24,7 @@ struct Camera {
 
 layout (std140, binding = COMMON_BINDING_POINT) uniform CommonBlock {
     Camera camera;
-    vec4 texture_bounds;
+    Texture tex;
     vec2 mouse_world;
     float tStep;
     float amplitude;
@@ -52,8 +58,8 @@ void main() {
     ivec2 texel = ce();
 
     if(fetchColor(texel).a > 0.0) {
-        float xlim = texture_bounds.z - texture_bounds.x - 1;
-        float ylim = texture_bounds.w - texture_bounds.y - 1;
+        float xlim = tex.bounds.z - tex.bounds.x - 1;
+        float ylim = tex.bounds.w - tex.bounds.y - 1;
         float d = normalDepth(fetchDepth(texel).r, amplitude);
         float hr = texel.x < xlim ? normalDepth(fetchDepth(ri()).r, amplitude) : d;
         float hu = texel.y < ylim ? normalDepth(fetchDepth(up()).r, amplitude) : d;
