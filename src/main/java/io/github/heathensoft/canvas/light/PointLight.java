@@ -79,7 +79,6 @@ public class PointLight {
         buffer.put(position.x).put(position.y).put(position.z).put(ambience);
         buffer.put(color.r).put(color.g).put(color.b).put(diffuse);
         attenuation.get(buffer);
-        buffer.put(0.0f);
         return buffer;
     }
     

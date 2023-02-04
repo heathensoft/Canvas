@@ -71,7 +71,8 @@ vec3 clampColor(vec3 rgb) {
 //********************************************************************
 
 struct OutputOptions {
-    bool output_normalmap; // precedence
+    bool output_depthmap; // precedence
+    bool output_normalmap;
     bool output_shadowmap;
     bool use_lighting;
     bool use_shadowmap;
@@ -84,7 +85,8 @@ OutputOptions getOptions(int options) {
         bool(options & 2),
         bool(options & 4),
         bool(options & 8),
-        bool(options & 16));
+        bool(options & 16),
+        bool(options & 32));
 }
 
 sampler2D colorSampler()        { return u_sampler_array[0]; }
@@ -120,7 +122,11 @@ void main() {
 
     OutputOptions options = getOptions(u_options);
 
-    if(options.output_normalmap) {
+    if(options.output_depthmap) {
+
+        color = vec4(fetchDepth(texel).rrr,source_alpha);
+
+    } else if (options.output_normalmap){
 
         color = vec4(fetchNormal(texel).rgb,source_alpha);
 

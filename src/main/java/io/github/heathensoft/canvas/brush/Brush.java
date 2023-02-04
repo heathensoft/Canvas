@@ -1,6 +1,5 @@
 package io.github.heathensoft.canvas.brush;
 
-import io.github.heathensoft.canvas.Channel;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.Area;
 import io.github.heathensoft.jlib.lwjgl.graphics.Color;
@@ -11,7 +10,7 @@ import org.lwjgl.system.MemoryStack;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.GL_NEAREST;
-
+import static io.github.heathensoft.canvas.ENUM.*;
 
 /**
  * @author Frederik Dahl
@@ -22,100 +21,32 @@ import static org.lwjgl.opengl.GL11.GL_NEAREST;
 public class Brush implements Disposable {
     
     public static final int TEXTURE_SIZE = 64; // must be pow2
-    
-    public enum Tool {
-        SAMPLER(0,"Sampler"),
-        FREE_HAND(1,"Free Hand"),
-        LINE_DRAW(2,"Line Draw"),
-        DRAG_AREA(3,"Drag Area");
-        public static final String DESCRIPTOR = "Tool";
-        public static final Tool DEFAULT = FREE_HAND;
-        public static final Tool[] ALL = values();
-        public static final int SIZE = ALL.length;
-        public final String descriptor;
-        public final int id;
-        public Tool next() {
-            return ALL[(id + 1) % SIZE];
-        }
-        public Tool prev() {
-            return id == 0 ? ALL[(SIZE - 1)] : ALL[id - 1];
-        }
-        Tool(int id, String descriptor) {
-            this.descriptor = descriptor;
-            this.id = id;
-        }
-    }
-    
-    public enum Shape {
-        ROUND(0,"Round"),
-        SQUARE(1,"Square");
-        public static final String DESCRIPTOR = "Shape";
-        public static final Shape DEFAULT = ROUND;
-        public static final Shape[] ALL = values();
-        public static final int SIZE = ALL.length;
-        public final String descriptor;
-        public final int id;
-        public Shape next() {
-            return ALL[(id + 1) % SIZE];
-        }
-        public Shape prev() {
-            return id == 0 ? ALL[(SIZE - 1)] : ALL[id - 1];
-        }
-        Shape(int id, String descriptor) {
-            this.descriptor = descriptor;
-            this.id = id;
-        }
-    }
-    
-    public enum Function {
-        NON(0,"None"),
-        SET(1,"Set"),
-        ADD(2,"Add"),
-        SUB(3,"Subtract"),
-        MIX(4,"Mix"),
-        SMOOTHEN(5,"Smoothen"),
-        SHARPEN(6,"Sharpen");
-        public static final String DESCRIPTOR = "Function";
-        public static final Function DEFAULT = SET;
-        public static final Function[] ALL = values();
-        public static final int SIZE = ALL.length;
-        public final String descriptor;
-        public final int id;
-        public Function next() {
-            return ALL[(id + 1) % SIZE];
-        }
-        public Function prev() {
-            return id == 0 ? ALL[(SIZE - 1)] : ALL[id - 1];
-        }
-        Function(int id, String descriptor) {
-            this.descriptor = descriptor;
-            this.id = id;
-        }
-    }
+    public static final int DEFAULT_SIZE = 1;
+    public static final int DEFAULT_COLOR = 0xFF;
     
     private int color;
     private int brush_size;
     private final int texture_size;
     
-    private Tool tool;
-    private Shape shape;
-    private Function function;
+    private BrushTool tool;
+    private BrushShape shape;
+    private BrushFunction function;
     private final Texture texture;
     private final Color contourColor;
     
     public Brush() {
-        this(Shape.ROUND,Tool.FREE_HAND,Function.SET,1);
+        this(BrushShape.DEFAULT, BrushTool.DEFAULT, BrushFunction.DEFAULT,DEFAULT_SIZE);
     }
     
     
-    public Brush(Shape shape, Tool tool, Function function, int size) {
+    public Brush(BrushShape shape, BrushTool tool, BrushFunction function, int size) {
         this.contourColor = Color.GREEN.cpy();
         this.texture_size = TEXTURE_SIZE;
+        this.color = DEFAULT_COLOR;
         this.brush_size = clampBrushSize(size);
         this.function = function;
         this.shape = shape;
         this.tool = tool;
-        this.color = 255;
         
         this.texture = Texture.generate2D(texture_size,texture_size);
         this.texture.bindToActiveSlot();
@@ -125,7 +56,7 @@ public class Brush implements Disposable {
         
         try (MemoryStack stack = MemoryStack.stackPush()){
             ByteBuffer pixels = stack.malloc(texture_size * texture_size);
-            if (shape == Shape.ROUND) {
+            if (shape == BrushShape.ROUND) {
                 boolean oddSize = (brush_size & 1) == 1;
                 float offset = oddSize ? 0.5f : 0.0f;
                 float radius2 = (brush_size / 2.f) * (brush_size / 2.f);
@@ -187,8 +118,6 @@ public class Brush implements Disposable {
         return size;
     }
     
-    
-    
     public int colorValue() {
         return color;
     }
@@ -211,8 +140,6 @@ public class Brush implements Disposable {
         return value;
     }
     
-    
-    
     public int textureSize() {
         return texture_size;
     }
@@ -221,33 +148,30 @@ public class Brush implements Disposable {
         return texture;
     }
     
-    
-    
-    public Tool tool() {
+    public BrushTool tool() {
         return tool;
     }
     
-    public void setTool(Tool tool) {
+    public void setTool(BrushTool tool) {
         this.tool = tool;
     }
     
-    
-    public Shape shape() {
+    public BrushShape shape() {
         return shape;
     }
     
-    public void setShape(Shape shape) {
+    public void setShape(BrushShape shape) {
         if (this.shape != shape) {
             this.shape = shape;
             refreshTexture();
         }
     }
     
-    public Function function() {
+    public BrushFunction function() {
         return function;
     }
     
-    public void setFunction(Function function) {
+    public void setFunction(BrushFunction function) {
         this.function = function;
     }
     
@@ -259,11 +183,10 @@ public class Brush implements Disposable {
         this.contourColor.set(color);
     }
     
-    
     private void refreshTexture() {
         try (MemoryStack stack = MemoryStack.stackPush()){
             ByteBuffer pixels = stack.malloc(texture_size * texture_size);
-            if (shape == Shape.ROUND) {
+            if (shape == BrushShape.ROUND) {
                 boolean oddSize = (brush_size & 1) == 1;
                 float offset = oddSize ? 0.5f : 0.0f;
                 float radius2 = (brush_size / 2.f) * (brush_size / 2.f);

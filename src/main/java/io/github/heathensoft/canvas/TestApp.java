@@ -45,7 +45,7 @@ public class TestApp extends Application {
         mouse_position = new Vector2f();
     
         External external = new External(External.USER_HOME("desktop"));
-        Path texturePath = external.path().resolve("Ritual.png");
+        Path texturePath = external.path().resolve("rock4.png");
     
         PngImporter importer = new PngImporter();
         importer.importColorImage(texturePath);
@@ -109,7 +109,7 @@ public class TestApp extends Application {
         }
     
         if (keyboard.just_pressed(GLFW_KEY_L)) {
-            //renderer.show_normals = ! renderer.show_normals;
+        
         
         }
         
@@ -129,11 +129,14 @@ public class TestApp extends Application {
     }
     
     protected void on_exit() {
+        /*
         try {
             renderer.project.save(External.USER_HOME("desktop","f"),true);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        
+         */
         Disposable.dispose(renderer);
     }
     

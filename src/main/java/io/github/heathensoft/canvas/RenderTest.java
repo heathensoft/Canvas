@@ -25,7 +25,8 @@ import static org.lwjgl.opengl.GL11.*;
 
     /*
     struct OutputOptions {
-    bool output_normalmap; // precedence
+    bool output_depthmap  // precedence
+    bool output_normalmap;
     bool output_shadowmap;
     bool use_lighting;
     bool use_shadowmap;
@@ -36,9 +37,9 @@ import static org.lwjgl.opengl.GL11.*;
 public class RenderTest implements Disposable {
     
     public final float depth_amplitude = 8.0f;
-    private int preview_options = 4 + 8 + 16;
+    private int preview_options = 8 + 16 + 32;
     
-    public Channel channel;
+    public ENUM.Channel channel;
     public Brush brush;
     public Project project;
     public PointLight light;
@@ -64,13 +65,13 @@ public class RenderTest implements Disposable {
         
         this.strokeRenderBuffer = new StrokeRenderBuffer(8);
         this.brush = new Brush(
-                Brush.Shape.ROUND,
-                Brush.Tool.FREE_HAND,
-                Brush.Function.MIX,
-                16
+                ENUM.BrushShape.ROUND,
+                ENUM.BrushTool.FREE_HAND,
+                ENUM.BrushFunction.SMOOTHEN,
+                32
         );
         
-        this.channel = Channel.DETAILS;
+        this.channel = ENUM.Channel.DETAILS;
         
     }
     
@@ -82,13 +83,13 @@ public class RenderTest implements Disposable {
         splitScreen.camera().refresh();
         
         // using volume for backbuffer
-        Texture tex_back = project.backBuffer().texture(Channel.VOLUME.id);
+        Texture tex_back = project.backBuffer().texture(ENUM.Channel.VOLUME.id);
         
         Texture tex_brush_overlay = project.brushOverlayBuffer().texture(0);
-        Texture tex_detail = project.frontBuffer().texture(Channel.DETAILS.id);
-        Texture tex_volume = project.frontBuffer().texture(Channel.VOLUME.id);
-        Texture tex_specular = project.frontBuffer().texture(Channel.SPECULAR.id);
-        Texture tex_emissive = project.frontBuffer().texture(Channel.EMISSIVE.id);
+        Texture tex_detail = project.frontBuffer().texture(ENUM.Channel.DETAILS.id);
+        Texture tex_volume = project.frontBuffer().texture(ENUM.Channel.VOLUME.id);
+        Texture tex_specular = project.frontBuffer().texture(ENUM.Channel.SPECULAR.id);
+        Texture tex_emissive = project.frontBuffer().texture(ENUM.Channel.EMISSIVE.id);
         Texture tex_preview = project.previewBuffer().texture(0);
         Texture tex_normals = project.normalsBuffer().texture(0);
         Texture tex_shadows = project.shadowBuffer().texture(0);
@@ -138,7 +139,7 @@ public class RenderTest implements Disposable {
         // BACK TO FRONT (USING BRUSH OVERLAY)
     
         Framebuffer.bindDraw(project.frontBuffer());
-        Framebuffer.drawBuffer(Channel.VOLUME.id);
+        Framebuffer.drawBuffer(ENUM.Channel.VOLUME.id);
         backToFrontBufferProgram.use();
     
         try (MemoryStack stack = MemoryStack.stackPush()){
@@ -216,7 +217,7 @@ public class RenderTest implements Disposable {
         textureLightingProgram.use();
         textureLightingProgram.setUniform1i(U_OPTIONS,preview_options);
         textureLightingProgram.setUniform1i(U_SAMPLER_3D,6);
-        ColorPalette.get("nanner").texture().bindToSlot(6);
+        ColorPalette.get("bright_future").texture().bindToSlot(6);
         // upload palette here
         try (MemoryStack stack = MemoryStack.stackPush()){
             IntBuffer buffer = stack.mallocInt(6);

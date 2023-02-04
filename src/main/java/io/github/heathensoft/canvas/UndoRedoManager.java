@@ -11,6 +11,7 @@ import org.lwjgl.system.MemoryUtil;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
+import static io.github.heathensoft.canvas.ENUM.*;
 
 /**
  * @author Frederik Dahl
@@ -40,9 +41,9 @@ public class UndoRedoManager implements Disposable {
         UndoRedoObject undoObject = stack.peakUndo();
         if (undoObject != null) {
             Area editArea = new Area(undoObject.editArea());
-            Brush.Function function = undoObject.function();
+            BrushFunction function = undoObject.function();
             Channel channel = undoObject.channel();
-            Brush.Tool tool = undoObject.tool();
+            BrushTool tool = undoObject.tool();
             UndoRedoObject redoObject = createObject(editArea,channel,tool,function);
             undoObject = stack.undo(redoObject);
             undoObject.upload();
@@ -54,9 +55,9 @@ public class UndoRedoManager implements Disposable {
         UndoRedoObject redoObject = stack.peakRedo();
         if (redoObject != null) {
             Area editArea = new Area(redoObject.editArea());
-            Brush.Function function = redoObject.function();
+            BrushFunction function = redoObject.function();
             Channel channel = redoObject.channel();
-            Brush.Tool tool = redoObject.tool();
+            BrushTool tool = redoObject.tool();
             UndoRedoObject undoObject = createObject(editArea,channel,tool,function);
             redoObject = stack.redo(undoObject);
             redoObject.upload();
@@ -93,7 +94,7 @@ public class UndoRedoManager implements Disposable {
     }
     
     private UndoRedoObject createObject(Area editArea, Channel channel,
-                                        Brush.Tool tool, Brush.Function function) {
+                                        BrushTool tool, BrushFunction function) {
         
         int tex_w = project.texturesWidth();
         int tex_h = project.texturesHeight();
@@ -112,13 +113,13 @@ public class UndoRedoManager implements Disposable {
         
         private final Area editArea;
         private final Channel channel;
-        private final Brush.Tool tool;
+        private final BrushTool tool;
         private final ByteBuffer buffer;
         private final Framebuffer backBuffer;
-        private final Brush.Function function;
+        private final BrushFunction function;
         
         UndoRedoObject(Framebuffer backBuffer, Area editArea, Channel channel,
-                              Brush.Tool tool, Brush.Function function) {
+                       BrushTool tool, BrushFunction function) {
             
             this.buffer = MemoryUtil.memAlloc(editArea.size());
             this.editArea = editArea;
@@ -155,11 +156,11 @@ public class UndoRedoManager implements Disposable {
             return channel;
         }
         
-        public Brush.Tool tool() {
+        public BrushTool tool() {
             return tool;
         }
         
-        public Brush.Function function() {
+        public BrushFunction function() {
             return function;
         }
         

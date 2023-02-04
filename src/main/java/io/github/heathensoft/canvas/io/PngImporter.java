@@ -9,10 +9,11 @@ import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 import static org.lwjgl.opengl.GL11.GL_NEAREST;
+import static io.github.heathensoft.canvas.ENUM.*;
 
 
 /**
@@ -30,10 +31,12 @@ public class PngImporter implements Disposable {
     private Image diffuse_image;
     private Image specular_image;
     private Image emissive_image;
-    private Status status;
+    private ImportStatus status;
+    private Path import_path;
     private String name;
     
-    public record Textures(Texture color_source,
+    public record Textures(String name, Path directory,
+                           Texture color_source,
                            Texture front_buffer_details,
                            Texture front_buffer_volume,
                            Texture front_buffer_specular,
@@ -41,23 +44,47 @@ public class PngImporter implements Disposable {
                            Texture back_buffer_details,
                            Texture back_buffer_volume,
                            Texture back_buffer_specular,
-                           Texture back_buffer_emissive) { }
+                           Texture back_buffer_emissive) {
     
-    public enum Status {
-        INCOMPLETE("Color image missing",false),
-        COMPLETE_READY("All images loaded",true),
-        INCOMPLETE_READY("Incomplete, ready",true),
-        SIZES_NOT_MATCHING("Image sizes not matching",false);
-        public final String description;
-        public final boolean ready;
-        Status(String description, boolean ready) {
-            this.description = description;
-            this.ready = ready;
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (Textures) obj;
+            return Objects.equals(this.color_source, that.color_source) &&
+                           Objects.equals(this.front_buffer_details, that.front_buffer_details) &&
+                           Objects.equals(this.front_buffer_volume, that.front_buffer_volume) &&
+                           Objects.equals(this.front_buffer_specular, that.front_buffer_specular) &&
+                           Objects.equals(this.front_buffer_emissive, that.front_buffer_emissive) &&
+                           Objects.equals(this.back_buffer_details, that.back_buffer_details) &&
+                           Objects.equals(this.back_buffer_volume, that.back_buffer_volume) &&
+                           Objects.equals(this.back_buffer_specular, that.back_buffer_specular) &&
+                           Objects.equals(this.back_buffer_emissive, that.back_buffer_emissive);
+        }
+    
+        @Override
+        public int hashCode() {
+            return Objects.hash(color_source, front_buffer_details, front_buffer_volume, front_buffer_specular, front_buffer_emissive, back_buffer_details, back_buffer_volume, back_buffer_specular, back_buffer_emissive);
+        }
+    
+        @Override
+        public String toString() {
+            return "Textures[" +
+                           "color_source=" + color_source + ", " +
+                           "front_buffer_details=" + front_buffer_details + ", " +
+                           "front_buffer_volume=" + front_buffer_volume + ", " +
+                           "front_buffer_specular=" + front_buffer_specular + ", " +
+                           "front_buffer_emissive=" + front_buffer_emissive + ", " +
+                           "back_buffer_details=" + back_buffer_details + ", " +
+                           "back_buffer_volume=" + back_buffer_volume + ", " +
+                           "back_buffer_specular=" + back_buffer_specular + ", " +
+                           "back_buffer_emissive=" + back_buffer_emissive + ']';
         }
     }
     
+    
     public PngImporter() {
-        status = Status.INCOMPLETE;
+        status = ImportStatus.INCOMPLETE;
         name = "untitled";
     }
     
@@ -70,6 +97,7 @@ public class PngImporter implements Disposable {
         } diffuse_image = image;
         status = validate();
         name = resolveName(path);
+        import_path = path.getParent();
     }
     
     public void importDetailsImage(Path path) throws Exception {
@@ -112,30 +140,30 @@ public class PngImporter implements Disposable {
         status = validate();
     }
     
-    private Status validate() {
+    private ImportStatus validate() {
         if (diffuse_image == null) {
-            return Status.INCOMPLETE;
+            return ImportStatus.INCOMPLETE;
         } int num_loaded = 1;
         int width = diffuse_image.width();
         int height = diffuse_image.height();
         if (details_image != null) {
             if (details_image.width() == width && details_image.height() == height) {
                 num_loaded++;
-            } else return Status.SIZES_NOT_MATCHING;
+            } else return ImportStatus.SIZES_NOT_MATCHING;
         } if (volume_image != null) {
             if (volume_image.width() == width && volume_image.height() == height) {
                 num_loaded++;
-            } else return Status.SIZES_NOT_MATCHING;
+            } else return ImportStatus.SIZES_NOT_MATCHING;
         } if (specular_image != null) {
             if (specular_image.width() == width && specular_image.height() == height) {
                 num_loaded++;
-            } else return Status.SIZES_NOT_MATCHING;
+            } else return ImportStatus.SIZES_NOT_MATCHING;
         } if (emissive_image != null) {
             if (emissive_image.width() == width && emissive_image.height() == height) {
                 num_loaded++;
-            } else return Status.SIZES_NOT_MATCHING;
-        } if (num_loaded == 5) return Status.COMPLETE_READY;
-        return Status.INCOMPLETE_READY;
+            } else return ImportStatus.SIZES_NOT_MATCHING;
+        } if (num_loaded == 5) return ImportStatus.COMPLETE_READY;
+        return ImportStatus.INCOMPLETE_READY;
     }
     
     /**
@@ -361,6 +389,8 @@ public class PngImporter implements Disposable {
             }
             
             return new Textures(
+                    name,
+                    import_path,
                     color_source,
                     front_buffer_details,
                     front_buffer_volume,
@@ -394,7 +424,7 @@ public class PngImporter implements Disposable {
         return emissive_image;
     }
     
-    public Status status() {
+    public ImportStatus status() {
         return status;
     }
     

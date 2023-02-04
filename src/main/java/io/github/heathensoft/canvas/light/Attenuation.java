@@ -12,12 +12,8 @@ public class Attenuation {
     
     // https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
     
-    public static final Attenuation ATT_7 = new Attenuation(1.0f,0.7f,1.8f);
-    public static final Attenuation ATT_13 = new Attenuation(1.0f,0.35f,0.44f);
-    public static final Attenuation ATT_20 = new Attenuation(1.0f,0.22f,0.20f);
-    public static final Attenuation ATT_32 = new Attenuation(1.0f,0.14f,0.07f);
-    public static final Attenuation ATT_50 = new Attenuation(1.0f,0.09f,0.032f);
-    public static final Attenuation ATT_65 = new Attenuation(1.0f,0.07f,0.017f);
+    public static final Attenuation DEFAULT;
+    public static final Attenuation[] PRESETS;
     public static final Attenuation ATT_100 = new Attenuation(1.0f,0.045f,0.0075f);
     public static final Attenuation ATT_160 = new Attenuation(1.0f,0.027f,0.0028f);
     public static final Attenuation ATT_200 = new Attenuation(1.0f,0.022f,0.0019f);
@@ -25,31 +21,35 @@ public class Attenuation {
     public static final Attenuation ATT_600 = new Attenuation(1.0f,0.007f,0.0002f);
     public static final Attenuation ATT_3250 = new Attenuation(1.0f,0.0014f,0.000007f);
     
+    static {
+        DEFAULT = ATT_600;
+        PRESETS = new Attenuation[] {ATT_100,ATT_160,ATT_200,ATT_325,ATT_600,ATT_3250};
+    }
+    
+    public static void getPresets(FloatBuffer buffer) {
+        for (Attenuation preset : PRESETS) {
+            preset.get(buffer);
+        }
+    }
+    
     private float constant;
     private float linear;
     private float quadratic;
     
     public Attenuation() {
-        this(Attenuation.ATT_65);
+        this(DEFAULT);
     }
     
-    public Attenuation(float c, float l, float q) {
-        this.constant = c;
-        this.linear = l;
-        this.quadratic = q;
+    public Attenuation(float constant, float linear, float quadratic) {
+        this.constant = constant;
+        this.linear = linear;
+        this.quadratic = quadratic;
     }
     
     public Attenuation(Attenuation attenuation) {
-        if (attenuation == null) {
-            this.constant = ATT_65.constant;
-            this.linear = ATT_65.linear;
-            this.quadratic = ATT_65.quadratic;
-        }
-        else {
-            this.constant = attenuation.constant;
-            this.linear = attenuation.linear;
-            this.quadratic = attenuation.quadratic;
-        }
+        this.constant = attenuation.constant;
+        this.linear = attenuation.linear;
+        this.quadratic = attenuation.quadratic;
     }
     
     public void set(Attenuation attenuation) {
@@ -60,15 +60,17 @@ public class Attenuation {
         }
     }
     
-    public void set(float c, float l, float q) {
-        this.constant = c;
-        this.linear = l;
-        this.quadratic = q;
+    public void set(float constant, float linear, float quadratic) {
+        this.constant = constant;
+        this.linear = linear;
+        this.quadratic = quadratic;
     }
     
-    protected void get(FloatBuffer buffer) {
-        buffer.put(constant).put(linear).put(quadratic);
+    public void get(FloatBuffer buffer) {
+        buffer.put(constant).put(linear).put(quadratic).put(0);
     }
+    
+    
     
     public float constant() {
         return constant;

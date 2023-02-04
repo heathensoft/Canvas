@@ -9,12 +9,15 @@ import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
 import io.github.heathensoft.jlib.lwjgl.graphics.TextureFormat;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import org.joml.Vector4f;
+import org.tinylog.Logger;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.lwjgl.opengl.GL11.GL_LINEAR;
 import static org.lwjgl.opengl.GL11.GL_NEAREST;
+import static io.github.heathensoft.canvas.ENUM.*;
 
 /**
  *
@@ -24,11 +27,15 @@ import static org.lwjgl.opengl.GL11.GL_NEAREST;
  * 24/01/2023
  */
 
+/* TODO: Output directory must be preset to be able to save.
+    Also, mark which channels have been edited ?
+ */
 
 public class Project implements Disposable, Comparable<Project> {
     
     private final int project_id;
     private String project_name;
+    private Path output_directory;
     private final Vector4f bounds;
     private final Texture colorSource;
     private final Framebuffer brushOverlayBuffer;
@@ -41,10 +48,6 @@ public class Project implements Disposable, Comparable<Project> {
     private final UndoRedoManager undoRedoManager;
     
     Project(PngImporter.Textures sources, int id) throws Exception {
-        this(default_project_name(),sources,id);
-    }
-    
-    Project(String name, PngImporter.Textures sources, int id) throws Exception {
         
         colorSource = sources.color_source();
         bounds = new Vector4f(0.0f,0.0f,texturesWidth(),texturesHeight());
@@ -65,20 +68,20 @@ public class Project implements Disposable, Comparable<Project> {
         Framebuffer.bind(frontBuffer);
         Framebuffer.attachColor(front_buffer_details, Channel.DETAILS.id,true);
         Framebuffer.attachColor(front_buffer_volume, Channel.VOLUME.id,true);
-        Framebuffer.attachColor(front_buffer_specular,Channel.SPECULAR.id,true);
-        Framebuffer.attachColor(front_buffer_emissive,Channel.EMISSIVE.id,true);
-        Framebuffer.drawBuffers(Channel.DETAILS.id,Channel.VOLUME.id,Channel.SPECULAR.id,Channel.EMISSIVE.id);
+        Framebuffer.attachColor(front_buffer_specular, Channel.SPECULAR.id,true);
+        Framebuffer.attachColor(front_buffer_emissive, Channel.EMISSIVE.id,true);
+        Framebuffer.drawBuffers(Channel.DETAILS.id, Channel.VOLUME.id, Channel.SPECULAR.id, Channel.EMISSIVE.id);
         Framebuffer.checkStatus();
     
         //***********************************************************************************************************
     
         backBuffer = new Framebuffer(texturesWidth(),texturesHeight());
         Framebuffer.bind(backBuffer);
-        Framebuffer.attachColor(back_buffer_details,Channel.DETAILS.id,true);
-        Framebuffer.attachColor(back_buffer_volume,Channel.VOLUME.id,true);
-        Framebuffer.attachColor(back_buffer_specular,Channel.SPECULAR.id,true);
-        Framebuffer.attachColor(back_buffer_emissive,Channel.EMISSIVE.id,true);
-        Framebuffer.drawBuffers(Channel.DETAILS.id,Channel.VOLUME.id,Channel.SPECULAR.id,Channel.EMISSIVE.id);
+        Framebuffer.attachColor(back_buffer_details, Channel.DETAILS.id,true);
+        Framebuffer.attachColor(back_buffer_volume, Channel.VOLUME.id,true);
+        Framebuffer.attachColor(back_buffer_specular, Channel.SPECULAR.id,true);
+        Framebuffer.attachColor(back_buffer_emissive, Channel.EMISSIVE.id,true);
+        Framebuffer.drawBuffers(Channel.DETAILS.id, Channel.VOLUME.id, Channel.SPECULAR.id, Channel.EMISSIVE.id);
         Framebuffer.checkStatus();
         
         //***********************************************************************************************************
@@ -154,11 +157,36 @@ public class Project implements Disposable, Comparable<Project> {
     
         //***********************************************************************************************************
     
-        project_name = name;
+        output_directory = sources.directory();
+        project_name = sources.name();
         project_id = id;
     }
     
-    public void save(Path output_directory, boolean overwrite) throws Exception {
+    public void save(Channel channel, boolean overwrite) throws Exception {
+        Texture texture = backBuffer.texture(channel.id);
+        PngExporter exporter = new PngExporter(output_directory,project_name);
+        exporter.exportEmissive(texture,overwrite);
+        switch (channel) {
+            case DETAILS    -> {exporter.exportDetails(texture,overwrite);}
+            case VOLUME     -> {exporter.exportVolume(texture,overwrite);}
+            case SPECULAR   -> {exporter.exportSpecular(texture,overwrite);}
+            case EMISSIVE   -> {exporter.exportEmissive(texture,overwrite);}
+        }
+    }
+    
+    public void savePreview(boolean overwrite) throws Exception {
+    
+    }
+    
+    public void saveNormals(boolean overwrite) throws Exception {
+    
+    }
+    
+    public void saveDepth(boolean overwrite) throws Exception {
+    
+    }
+    
+    public void saveAll(boolean overwrite) throws Exception {
         
         Texture preview =               previewBuffer.texture(0);
         Texture depth_map =             depthBuffer.texture(0);
@@ -177,10 +205,6 @@ public class Project implements Disposable, Comparable<Project> {
         exporter.exportVolume(back_buffer_volume,overwrite);
         exporter.exportSpecular(back_buffer_specular,overwrite);
         exporter.exportEmissive(back_buffer_emissive,overwrite);
-    }
-    
-    public void save(boolean overwrite) throws Exception {
-        save(default_output_directory(),overwrite);
     }
     
     public void viewport() {
@@ -237,6 +261,13 @@ public class Project implements Disposable, Comparable<Project> {
     
     public void setProjectName(String name) {
         this.project_name = name;
+    }
+    
+    public boolean setOutputDirectory(Path path) {
+        if (Files.isDirectory(path)) {
+            output_directory = path;
+            return true;
+        } return false;
     }
     
     public int texturesWidth() {

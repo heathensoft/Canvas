@@ -14,6 +14,7 @@ sampler2D backBufferSampler() { return u_sampler_array[0]; }
 sampler2D brushOverlaySampler() { return u_sampler_array[1]; }
 float fetchBackBufferRed(ivec2 texel) { return texelFetch(backBufferSampler(),texel,0).r; }
 float fetchBrushOverlayRed(ivec2 texel) { return texelFetch(brushOverlaySampler(),texel,0).r; }
+float sampleBackBufferRed(vec2 uv) { return texture(backBufferSampler(), uv).r; }
 
 //********************************************************************
 // Common
@@ -138,9 +139,11 @@ void main() {
                 kernel = SHARPEN_KERNEL;
             }
 
-            for(int i = 0; i < 9; i++) {
+            vec2 tex_size_inv = 1.0 / vec2(tex.bounds.zw - tex.bounds.xy);
 
-                final_color += fetchBackBufferRed(texel + adjacent[i]) * kernel[i];
+            for(int i = 0; i < 9; i++) {
+                vec2 uv = vec2(texel + adjacent[i]) * tex_size_inv;
+                final_color += sampleBackBufferRed(uv) * kernel[i];
             }
         }
 
