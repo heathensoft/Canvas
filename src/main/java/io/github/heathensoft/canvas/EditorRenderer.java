@@ -3,7 +3,7 @@ package io.github.heathensoft.canvas;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.Framebuffer;
 
-import static io.github.heathensoft.canvas.ENUM.*;
+import static io.github.heathensoft.canvas.f.ENUM.*;
 
 /**
  * @author Frederik Dahl

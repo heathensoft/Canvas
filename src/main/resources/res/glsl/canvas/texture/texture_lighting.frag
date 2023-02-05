@@ -71,6 +71,7 @@ vec3 clampColor(vec3 rgb) {
 //********************************************************************
 
 struct OutputOptions {
+    /* output_color */
     bool output_depthmap; // precedence
     bool output_normalmap;
     bool output_shadowmap;

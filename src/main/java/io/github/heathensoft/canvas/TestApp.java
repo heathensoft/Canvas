@@ -1,7 +1,7 @@
 package io.github.heathensoft.canvas;
 
-import io.github.heathensoft.canvas.brush.Brush;
-import io.github.heathensoft.canvas.io.PngImporter;
+import io.github.heathensoft.canvas.f.Project;
+import io.github.heathensoft.canvas.f.io.PngImporter;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.io.External;
 import io.github.heathensoft.jlib.lwjgl.utils.Input;
@@ -45,7 +45,7 @@ public class TestApp extends Application {
         mouse_position = new Vector2f();
     
         External external = new External(External.USER_HOME("desktop"));
-        Path texturePath = external.path().resolve("rock4.png");
+        Path texturePath = external.path().resolve("rock2.png");
     
         PngImporter importer = new PngImporter();
         importer.importColorImage(texturePath);

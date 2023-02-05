@@ -72,11 +72,10 @@ void main() {
 
     vec4 color = texture(u_sampler_2d, fs_in.uv);
 
-    if(!withinArea(fs_in.pos, tex.bounds)) {
-        if(!withinRadius(fs_in.pos, light.position.xy, R2)) {
-            color.rgb *= DARKEN;
-        }
+    if(!withinRadius(fs_in.pos, light.position.xy, R2)) {
+        color.rgb *= DARKEN;
     }
+    // if(!withinArea(fs_in.pos, tex.bounds)) {}
     f_color = color;
 }
 

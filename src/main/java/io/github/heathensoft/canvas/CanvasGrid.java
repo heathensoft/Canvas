@@ -57,6 +57,10 @@ public class CanvasGrid implements Disposable {
         return grid_size;
     }
     
+    public boolean isVisible() {
+        return show;
+    }
+    
     public void incrementSize() {
         int size = grid_size + 1;
         setSize(size);
@@ -77,6 +81,10 @@ public class CanvasGrid implements Disposable {
     
     public void setAxisColor(Color color) {
         this.axisColor.set(color);
+    }
+    
+    public void toggleHide() {
+        show = !show;
     }
     
     public void show() {

@@ -1,7 +1,9 @@
 package io.github.heathensoft.canvas;
 
 import io.github.heathensoft.canvas.brush.Brush;
-import io.github.heathensoft.canvas.io.PngImporter;
+import io.github.heathensoft.canvas.f.Project;
+import io.github.heathensoft.canvas.f.UndoRedoManager;
+import io.github.heathensoft.canvas.f.io.PngImporter;
 import io.github.heathensoft.canvas.light.PointLight;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.storage.generic.Container;
@@ -9,6 +11,7 @@ import io.github.heathensoft.jlib.common.utils.Area;
 import io.github.heathensoft.jlib.common.utils.Coordinate;
 import io.github.heathensoft.jlib.common.utils.DiscreteLine;
 import io.github.heathensoft.jlib.common.utils.IDPool;
+import io.github.heathensoft.jlib.lwjgl.graphics.Palette;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.utils.OrthographicCamera;
 import io.github.heathensoft.jlib.lwjgl.window.Keyboard;
@@ -21,10 +24,10 @@ import org.tinylog.Logger;
 
 import java.util.*;
 
-import static io.github.heathensoft.canvas.ENUM.*;
-import static io.github.heathensoft.canvas.ENUM.BrushShape.ROUND;
-import static io.github.heathensoft.canvas.ENUM.BrushShape.SQUARE;
-import static io.github.heathensoft.canvas.ENUM.BrushTool.*;
+import static io.github.heathensoft.canvas.f.ENUM.*;
+import static io.github.heathensoft.canvas.f.ENUM.BrushShape.ROUND;
+import static io.github.heathensoft.canvas.f.ENUM.BrushShape.SQUARE;
+import static io.github.heathensoft.canvas.f.ENUM.BrushTool.*;
 import static org.lwjgl.glfw.GLFW.*;
 
 
@@ -65,7 +68,7 @@ public class Editor implements Disposable {
     public final int screen_width;
     public final int screen_height;
     
-    public ColorPalette current_palette;
+    public Palette current_palette;
     public Project active_project;
     public Channel current_channel;
     public PreviewDisplay preview_display;
@@ -120,8 +123,7 @@ public class Editor implements Disposable {
         this.editor_camera.viewport.set(screen_width / 2f, screen_height);
         this.editor_camera.refresh();
     
-        ColorPalette.loadResources();
-        this.current_palette = ColorPalette.get(ColorPalette.DEFAULT);
+        
         this.brush = new Brush();
         this.light = new PointLight();
         this.current_channel = Channel.DEFAULT;
@@ -413,10 +415,7 @@ public class Editor implements Disposable {
                 
                 switch (brush.tool()) {
                     
-                    case SAMPLER -> {
-                        
-                        brush_drag_area.set(cursor_coordinate);
-                    }
+                    case SAMPLER -> brush_drag_area.set(cursor_coordinate);
                     case FREE_HAND -> {
                         
                         if (editable_area_bounds.contains(cursor_coordinate)) {
@@ -432,26 +431,21 @@ public class Editor implements Disposable {
                                 cursor_coordinate,new Coordinate());
                         lineDraw_coordinates.set(cursor_coordinate_start,end);
                     }
-                    case DRAG_AREA -> {
-                        
-                        brush_drag_area.set(
-                                cursor_coordinate_start,
-                                cursor_coordinate);
-                    }
+                    case DRAG_AREA -> brush_drag_area.set(
+                            cursor_coordinate_start,
+                            cursor_coordinate);
+                    default -> throw new IllegalStateException("Unexpected value: " + brush.tool());
                 }
             }
             
-        } else {
-            
-            if (mouse.just_started_drag(Mouse.LEFT)) {
-                // START EDITING
-                freeHand_coordinates.clear();
-                cursor_position_start.set(cursor_position);
-                cursor_coordinate_start.set(
-                        (int) cursor_position.x,
-                        (int) cursor_position.y);
-                currently_editing = true;
-            }
+        } else if (mouse.just_started_drag(Mouse.LEFT)) {
+            // START EDITING
+            freeHand_coordinates.clear();
+            cursor_position_start.set(cursor_position);
+            cursor_coordinate_start.set(
+                    (int) cursor_position.x,
+                    (int) cursor_position.y);
+            currently_editing = true;
         }
     }
     
@@ -562,18 +556,12 @@ public class Editor implements Disposable {
     }
     
     public void setPalette(String name) {
-        if (!current_palette.name().equals(name)) {
-            ColorPalette palette = ColorPalette.get(name);
-            if (palette != null) {
-                current_palette = palette;
-            } else Logger.warn("no palette with name: " + name);
-        }
+    
     }
     
     public void dispose() {
         
         closeAllProjects();
-        ColorPalette.disposeAll();
         Disposable.dispose(
                 brush
         );

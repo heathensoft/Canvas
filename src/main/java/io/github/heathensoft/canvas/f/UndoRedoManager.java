@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas;
+package io.github.heathensoft.canvas.f;
 
 import io.github.heathensoft.canvas.brush.Brush;
 import io.github.heathensoft.jlib.common.Disposable;
@@ -11,7 +11,7 @@ import org.lwjgl.system.MemoryUtil;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
-import static io.github.heathensoft.canvas.ENUM.*;
+import static io.github.heathensoft.canvas.f.ENUM.*;
 
 /**
  * @author Frederik Dahl

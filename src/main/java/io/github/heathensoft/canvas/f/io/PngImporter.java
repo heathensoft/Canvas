@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas.io;
+package io.github.heathensoft.canvas.f.io;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.Image;
@@ -10,10 +10,9 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
-import java.util.Objects;
 
 import static org.lwjgl.opengl.GL11.GL_NEAREST;
-import static io.github.heathensoft.canvas.ENUM.*;
+import static io.github.heathensoft.canvas.f.ENUM.*;
 
 
 /**
@@ -44,43 +43,7 @@ public class PngImporter implements Disposable {
                            Texture back_buffer_details,
                            Texture back_buffer_volume,
                            Texture back_buffer_specular,
-                           Texture back_buffer_emissive) {
-    
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (Textures) obj;
-            return Objects.equals(this.color_source, that.color_source) &&
-                           Objects.equals(this.front_buffer_details, that.front_buffer_details) &&
-                           Objects.equals(this.front_buffer_volume, that.front_buffer_volume) &&
-                           Objects.equals(this.front_buffer_specular, that.front_buffer_specular) &&
-                           Objects.equals(this.front_buffer_emissive, that.front_buffer_emissive) &&
-                           Objects.equals(this.back_buffer_details, that.back_buffer_details) &&
-                           Objects.equals(this.back_buffer_volume, that.back_buffer_volume) &&
-                           Objects.equals(this.back_buffer_specular, that.back_buffer_specular) &&
-                           Objects.equals(this.back_buffer_emissive, that.back_buffer_emissive);
-        }
-    
-        @Override
-        public int hashCode() {
-            return Objects.hash(color_source, front_buffer_details, front_buffer_volume, front_buffer_specular, front_buffer_emissive, back_buffer_details, back_buffer_volume, back_buffer_specular, back_buffer_emissive);
-        }
-    
-        @Override
-        public String toString() {
-            return "Textures[" +
-                           "color_source=" + color_source + ", " +
-                           "front_buffer_details=" + front_buffer_details + ", " +
-                           "front_buffer_volume=" + front_buffer_volume + ", " +
-                           "front_buffer_specular=" + front_buffer_specular + ", " +
-                           "front_buffer_emissive=" + front_buffer_emissive + ", " +
-                           "back_buffer_details=" + back_buffer_details + ", " +
-                           "back_buffer_volume=" + back_buffer_volume + ", " +
-                           "back_buffer_specular=" + back_buffer_specular + ", " +
-                           "back_buffer_emissive=" + back_buffer_emissive + ']';
-        }
-    }
+                           Texture back_buffer_emissive) { }
     
     
     public PngImporter() {
@@ -248,15 +211,16 @@ public class PngImporter implements Disposable {
             }
     
             if (volume_image == null) {
-                DepthMap8 depthMap = new DepthMap8(diffuse_image);
-                ByteBuffer buffer = MemoryUtil.memAlloc(depthMap.size());
-                buffer.put(depthMap.get()).flip();
+                byte color = 0x7F;
+                int size = WIDTH * HEIGHT;
+                ByteBuffer buffer = MemoryUtil.memAlloc(size);
+                for (int i = 0; i < size; i++) buffer.put(color);
                 front_buffer_volume = Texture.generate2D(WIDTH,HEIGHT);
                 front_buffer_volume.bindToActiveSlot();
                 front_buffer_volume.allocate(TextureFormat.R8_UNSIGNED_NORMALIZED,false);
                 front_buffer_volume.filter(GL_NEAREST,GL_NEAREST);
                 front_buffer_volume.clampToEdge();
-                front_buffer_volume.uploadData(buffer);
+                front_buffer_volume.uploadData(buffer.flip());
                 back_buffer_volume = Texture.generate2D(WIDTH,HEIGHT);
                 back_buffer_volume.bindToActiveSlot();
                 back_buffer_volume.allocate(TextureFormat.R8_UNSIGNED_NORMALIZED,false);

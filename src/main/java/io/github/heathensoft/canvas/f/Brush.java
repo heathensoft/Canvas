@@ -1,16 +1,21 @@
-package io.github.heathensoft.canvas.brush;
+package io.github.heathensoft.canvas.f;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.Area;
+import io.github.heathensoft.jlib.lwjgl.graphics.BufferObject;
 import io.github.heathensoft.jlib.lwjgl.graphics.Color;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
 import io.github.heathensoft.jlib.lwjgl.graphics.TextureFormat;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
-import static org.lwjgl.opengl.GL11.GL_NEAREST;
 import static io.github.heathensoft.canvas.f.ENUM.*;
+import static org.lwjgl.opengl.GL11.GL_NEAREST;
+import static org.lwjgl.opengl.GL15.GL_DYNAMIC_DRAW;
+import static org.lwjgl.opengl.GL31.GL_UNIFORM_BUFFER;
 
 /**
  * @author Frederik Dahl
@@ -20,9 +25,19 @@ import static io.github.heathensoft.canvas.f.ENUM.*;
 
 public class Brush implements Disposable {
     
+    public static final int BINDING_POINT = 3;
+    public static final int UNIFORM_BLOCK_SIZE = 8;
     public static final int TEXTURE_SIZE = 64; // must be pow2
     public static final int DEFAULT_SIZE = 5;
     public static final int DEFAULT_COLOR = 0xFF;
+    
+    private static Brush instance;
+    
+    public static Brush get() {
+        if (instance == null) {
+            instance = new Brush();
+        } return instance;
+    }
     
     private int color;
     private int brush_size;
@@ -33,13 +48,13 @@ public class Brush implements Disposable {
     private BrushFunction function;
     private final Texture texture;
     private final Color contourColor;
+    private final BufferObject uniformBuffer;
     
-    public Brush() {
+    private Brush() {
         this(BrushShape.DEFAULT, BrushTool.DEFAULT, BrushFunction.DEFAULT,DEFAULT_SIZE);
     }
     
-    
-    public Brush(BrushShape shape, BrushTool tool, BrushFunction function, int size) {
+    private Brush(BrushShape shape, BrushTool tool, BrushFunction function, int size) {
         this.contourColor = Color.GREEN.cpy();
         this.texture_size = TEXTURE_SIZE;
         this.color = DEFAULT_COLOR;
@@ -47,6 +62,11 @@ public class Brush implements Disposable {
         this.function = function;
         this.shape = shape;
         this.tool = tool;
+    
+        this.uniformBuffer = new BufferObject(GL_UNIFORM_BUFFER,GL_DYNAMIC_DRAW);
+        this.uniformBuffer.bind();
+        this.uniformBuffer.bufferData((long) UNIFORM_BLOCK_SIZE * Integer.BYTES);
+        this.uniformBuffer.bindBufferBase(BINDING_POINT);
         
         this.texture = Texture.generate2D(texture_size,texture_size);
         this.texture.bindToActiveSlot();
@@ -89,7 +109,15 @@ public class Brush implements Disposable {
         }
     }
     
-    
+    public void uploadUniformBlock() {
+        uniformBuffer.bind();
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer buffer = stack.mallocInt(UNIFORM_BLOCK_SIZE);
+            buffer.put(texture_size).put(texture_size).put(function.id);
+            buffer.put(color).put(tool.id).put(shape.id).put(brush_size).put(0);
+            uniformBuffer.bufferSubData(buffer.flip(),0);
+        }
+    }
     
     public int brushSize() {
         return brush_size;
@@ -159,6 +187,10 @@ public class Brush implements Disposable {
         return shape;
     }
     
+    public void toggleShape() {
+        setShape(shape.next());
+    }
+    
     public void setShape(BrushShape shape) {
         if (this.shape != shape) {
             this.shape = shape;
@@ -220,7 +252,7 @@ public class Brush implements Disposable {
     }
     
     public void dispose() {
-        Disposable.dispose(texture);
+        Disposable.dispose(texture,uniformBuffer);
     }
     
 }

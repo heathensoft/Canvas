@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas;
+package io.github.heathensoft.canvas.f;
 
 
 /**
@@ -120,7 +120,9 @@ public class ENUM {
         SUB(3,"Subtract"),
         MIX(4,"Mix"),
         SMOOTHEN(5,"Smoothen"),
-        SHARPEN(6,"Sharpen");
+        SHARPEN(6,"Sharpen"),
+        RAISE(7,"Raise"),
+        LOWER(8,"Lower");
         public static final String DESCRIPTOR = "Brush Function";
         public static final BrushFunction DEFAULT = SET;
         public static final BrushFunction[] ALL = values();

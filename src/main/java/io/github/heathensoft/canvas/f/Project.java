@@ -1,23 +1,24 @@
-package io.github.heathensoft.canvas;
+package io.github.heathensoft.canvas.f;
 
-import io.github.heathensoft.canvas.io.PngExporter;
-import io.github.heathensoft.canvas.io.PngImporter;
+import io.github.heathensoft.canvas.f.io.PngExporter;
+import io.github.heathensoft.canvas.f.io.PngImporter;
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.io.External;
+import io.github.heathensoft.jlib.lwjgl.graphics.BufferObject;
 import io.github.heathensoft.jlib.lwjgl.graphics.Framebuffer;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
 import io.github.heathensoft.jlib.lwjgl.graphics.TextureFormat;
+import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
+import org.joml.Matrix4f;
 import org.joml.Vector4f;
-import org.tinylog.Logger;
 
-import java.io.IOException;
+import java.nio.FloatBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.lwjgl.opengl.GL11.GL_LINEAR;
 import static org.lwjgl.opengl.GL11.GL_NEAREST;
-import static io.github.heathensoft.canvas.ENUM.*;
+import static io.github.heathensoft.canvas.f.ENUM.*;
 
 /**
  *
@@ -27,9 +28,6 @@ import static io.github.heathensoft.canvas.ENUM.*;
  * 24/01/2023
  */
 
-/* TODO: Output directory must be preset to be able to save.
-    Also, mark which channels have been edited ?
- */
 
 public class Project implements Disposable, Comparable<Project> {
     
@@ -47,7 +45,7 @@ public class Project implements Disposable, Comparable<Project> {
     private final Framebuffer backBuffer;
     private final UndoRedoManager undoRedoManager;
     
-    Project(PngImporter.Textures sources, int id) throws Exception {
+    public Project(PngImporter.Textures sources, int id) throws Exception {
         
         colorSource = sources.color_source();
         bounds = new Vector4f(0.0f,0.0f,texturesWidth(),texturesHeight());
@@ -162,28 +160,46 @@ public class Project implements Disposable, Comparable<Project> {
         project_id = id;
     }
     
+    public void getUniforms(FloatBuffer buffer) { // 36
+        Matrix4f texture_to_world = MathLib.mat4().identity();
+        Matrix4f world_to_texture = MathLib.mat4();
+        float texture_w = bounds.z - bounds.x;
+        float texture_h = bounds.w - bounds.y;
+        texture_to_world.translate(bounds.x,bounds.y,0);
+        texture_to_world.scale(texture_w,texture_h,1);
+        world_to_texture.set(texture_to_world).invert();
+        BufferObject.put(texture_to_world,buffer);
+        BufferObject.put(world_to_texture,buffer);
+        BufferObject.put(bounds,buffer);
+    }
+    
     public void save(Channel channel, boolean overwrite) throws Exception {
         Texture texture = backBuffer.texture(channel.id);
         PngExporter exporter = new PngExporter(output_directory,project_name);
-        exporter.exportEmissive(texture,overwrite);
         switch (channel) {
-            case DETAILS    -> {exporter.exportDetails(texture,overwrite);}
-            case VOLUME     -> {exporter.exportVolume(texture,overwrite);}
-            case SPECULAR   -> {exporter.exportSpecular(texture,overwrite);}
-            case EMISSIVE   -> {exporter.exportEmissive(texture,overwrite);}
+            case DETAILS    -> exporter.exportDetails(texture,overwrite);
+            case VOLUME     -> exporter.exportVolume(texture,overwrite);
+            case SPECULAR   -> exporter.exportSpecular(texture,overwrite);
+            case EMISSIVE   -> exporter.exportEmissive(texture,overwrite);
         }
     }
     
     public void savePreview(boolean overwrite) throws Exception {
-    
+        Texture texture = previewBuffer.texture(0);
+        PngExporter exporter = new PngExporter(output_directory,project_name);
+        exporter.exportPreview(texture,overwrite);
     }
     
     public void saveNormals(boolean overwrite) throws Exception {
-    
+        Texture texture = normalsBuffer.texture(0);
+        PngExporter exporter = new PngExporter(output_directory,project_name);
+        exporter.exportNormals(texture,overwrite);
     }
     
     public void saveDepth(boolean overwrite) throws Exception {
-    
+        Texture texture = depthBuffer.texture(0);
+        PngExporter exporter = new PngExporter(output_directory,project_name);
+        exporter.exportDepth(texture,overwrite);
     }
     
     public void saveAll(boolean overwrite) throws Exception {
@@ -197,7 +213,7 @@ public class Project implements Disposable, Comparable<Project> {
         Texture back_buffer_emissive =  backBuffer.texture(Channel.EMISSIVE.id);
     
         PngExporter exporter = new PngExporter(output_directory,project_name);
-        exporter.exportColor(colorSource,overwrite);
+        //exporter.exportColor(colorSource,overwrite);
         exporter.exportPreview(preview,overwrite);
         exporter.exportDepth(depth_map,overwrite);
         exporter.exportNormals(normal_map,overwrite);
@@ -291,15 +307,6 @@ public class Project implements Disposable, Comparable<Project> {
                 undoRedoManager
         );
     }
-    
-    public static Path default_output_directory() throws IOException {
-        return External.USER_HOME();
-    }
-    
-    public static String default_project_name() {
-        return "untitled";
-    }
-    
     
     public int compareTo(Project o) {
         return Integer.compare(o.project_id,project_id);

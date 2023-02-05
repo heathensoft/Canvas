@@ -1,4 +1,4 @@
-package io.github.heathensoft.canvas.io;
+package io.github.heathensoft.canvas.f.io;
 
 import io.github.heathensoft.jlib.common.io.External;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
