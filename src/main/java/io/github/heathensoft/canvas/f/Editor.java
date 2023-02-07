@@ -15,19 +15,20 @@ import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.utils.OrthographicCamera;
 import io.github.heathensoft.jlib.lwjgl.window.Keyboard;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
+import io.github.heathensoft.jlib.lwjgl.window.Resolution;
 import org.joml.*;
 import org.joml.Math;
 import org.lwjgl.system.MemoryStack;
 import org.tinylog.Logger;
 
 import java.nio.FloatBuffer;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static io.github.heathensoft.canvas.f.ENUM.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_ALT;
+import static org.lwjgl.opengl.GL15.GL_DYNAMIC_DRAW;
+import static org.lwjgl.opengl.GL31.GL_UNIFORM_BUFFER;
 
 /**
  * @author Frederik Dahl
@@ -50,39 +51,37 @@ public class Editor implements Disposable {
     public static final float CAMERA_ZOOM_MAX =  4.0f; // 0 = 100%
     public static final float CAMERA_ZOOM_MIN = -4.0f;
     
-    private IDPool projectIdPool;
-    private Container<Project> projectsById;
-    private List<Project> projectList;
+    private final IDPool projectIdPool;
+    private final Container<Project> projectsById;
+    private final List<Project> projectList;
     
-    private BufferObject uniformBufferEditor;
-    private BufferObject uniformBufferProject;
-    private CanvasBackground canvasBackground;
-    private CanvasGrid canvasGrid;
-    private PipeLine pipeline;
+    private final BufferObject uniformBufferEditor;
+    private final BufferObject uniformBufferProject;
+    private final EditorGraphics graphics;
     
-    private Brush brush;
+    private final Brush brush;
+    private final Palette defaultPalette;
+    private final PreviewLighting lighting;
     private Project activeProject;
-    private Palette defaultPalette;
     private Palette currentPalette;
     private Channel currentChannel;
-    private PreviewLighting lighting;
     private PreviewDisplay previewDisplay;
     
-    private Area brushDragArea;
-    private Area editableAreaBounds;
-    private DiscreteLine lineDrawCoordinates;
-    private Set<Coordinate> freeHandCoordinates;
-    private OrthographicCamera camera;
-    private Matrix4f screenCombinedInv;
-    private Matrix4f screenCombinedMat;
-    private Matrix4f unprojectMatLeft;
-    private Matrix4f unprojectMatRight;
-    private Vector2f mouseCurrent;
-    private Vector2f mouseStart;
-    private Coordinate mouseCoordCurrent;
-    private Coordinate mouseCoordStart;
-    private int screen_width;
-    private int screen_height;
+    private final Area brushDragArea;
+    private final Area editableAreaBounds;
+    private final DiscreteLine lineDrawCoordinates;
+    private final Set<Coordinate> freeHandCoordinates;
+    private final OrthographicCamera camera;
+    private final Matrix4f screenCombinedInv;
+    private final Matrix4f screenCombinedMat;
+    private final Matrix4f unprojectMatLeft;
+    private final Matrix4f unprojectMatRight;
+    private final Vector2f mouseCurrent;
+    private final Vector2f mouseStart;
+    private final Coordinate mouseCoordCurrent;
+    private final Coordinate mouseCoordStart;
+    private final int screen_width;
+    private final int screen_height;
     
     private float detail_to_volume_ratio;
     private float virtual_depth_amplitude;
@@ -95,10 +94,167 @@ public class Editor implements Disposable {
     private boolean preview_palette;
     
     
+    public Editor(Resolution resolution) throws Exception {
+        this.projectIdPool = new IDPool();
+        this.projectsById = new Container<>(8);
+        this.projectList = new ArrayList<>(8);
+        this.lineDrawCoordinates = new DiscreteLine(0,0,0,0);
+        this.freeHandCoordinates = new HashSet<>(137); // arbitrary prime
+        this.brushDragArea = new Area();
+        this.editableAreaBounds = new Area();
+        this.mouseCurrent = new Vector2f();
+        this.mouseStart = new Vector2f();
+        this.mouseCoordCurrent = new Coordinate();
+        this.mouseCoordStart = new Coordinate();
+        this.screen_width = resolution.width();
+        this.screen_height = resolution.height();
+        this.screenCombinedMat = new Matrix4f();
+        this.screenCombinedMat.ortho(0,screen_width,0,screen_height,0.01f,1);
+        this.screenCombinedMat.mul(MathLib.mat4().identity().lookAt(
+                0,0,1, 0,0,-1, 0,1,0));
+        this.screenCombinedInv= new Matrix4f(screenCombinedMat).invert();
+        this.unprojectMatLeft = new Matrix4f(
+                0.5f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                -0.5f, 0.0f, 0.0f, 1.0f).invert();
+        this.unprojectMatRight = new Matrix4f(
+                0.5f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                0.5f, 0.0f, 0.0f, 1.0f).invert();
+        this.camera = new OrthographicCamera();
+        this.camera.viewport.set(screen_width / 2f, screen_height);
+        this.camera.refresh();
+        this.currentChannel = Channel.DEFAULT;
+        this.previewDisplay = PreviewDisplay.DEFAULT;
+        this.virtual_depth_amplitude = DEPTH_AMPLITUDE_DEFAULT;
+        this.detail_to_volume_ratio = DETAIL_TO_VOLUME_RATIO_DEFAULT;
+        this.current_zoom_amount = 0.0f;
+        this.brush = Brush.get();
+        this.lighting = PreviewLighting.get();
+        this.defaultPalette = Palette.brightFuture();
+        this.currentPalette = defaultPalette;
+        this.uniformBufferEditor = new BufferObject(GL_UNIFORM_BUFFER,GL_DYNAMIC_DRAW).bind();
+        this.uniformBufferEditor.bufferData((long) EDITOR_UNIFORMS_SIZE_FLOAT * Float.BYTES);
+        this.uniformBufferEditor.bindBufferBase(EDITOR_BINDING_POINT);
+        this.uniformBufferProject = new BufferObject(GL_UNIFORM_BUFFER,GL_DYNAMIC_DRAW).bind();
+        this.uniformBufferProject.bufferData((long) PROJECT_UNIFORMS_SIZE_FLOAT * Float.BYTES);
+        this.uniformBufferProject.bindBufferBase(PROJECT_BINDING_POINT);
+        this.graphics = new EditorGraphics();
+    }
     
     
+    public void render(float frame_time) {
+        camera.refresh();
+        shader_time_accumulator += frame_time;
+        lighting.uploadUniformBlock();
+        brush.uploadUniformBlock();
+        uploadEditorUniformBlock();
+        if (projectIsOpen()) {
+            uploadProjectUniformBlock();
+            graphics.projectPipeline();
+        } graphics.renderSplitScreen();
+        
+    }
     
+    public void process(Mouse mouse, Keyboard keys) {
+        unProjectMouse(mouse.ndc(),mouseCurrent);
+        mouseCoordCurrent.set(
+                (int) mouseCurrent.x,
+                (int) mouseCurrent.y);
+        currently_dragging = false;
+        processInput(mouse,keys);
+        if (projectIsOpen()) {
+            processEditing(mouse);
+        } else currently_editing = false;
+    }
     
+    private void processEditing(Mouse mouse) {
+        
+        if (brush().tool() == BrushTool.SAMPLER) { // Sampling is not editing
+            currently_editing = false;
+            currently_dragging = false;
+            if (activeProject.withinBounds(mouseCoordCurrent)) {
+                brushDragArea.set(mouseCoordCurrent);
+                graphics.readPixel(mouseCoordCurrent);
+                if (mouse.button_pressed(Mouse.LEFT)) {
+                    brush.setColor(graphics.pixelValue());
+                }
+            }
+        } else {
+            if (currently_editing) {
+                if (!mouse.button_pressed(Mouse.LEFT)) { // FINISH EDITING
+                    currently_editing = false;
+                    UndoRedoManager URM = activeProject.undoRedoManager();
+                    Vector4f bounds = activeProject.bounds();
+                    Area projectArea = new Area(
+                            (int) bounds.x, (int) bounds.y,
+                            (int) bounds.z, (int) bounds.w);
+                    switch (brush.tool()) {
+                        case FREE_HAND -> {
+                            if (!freeHandCoordinates.isEmpty()) {
+                                int min_x = Integer.MAX_VALUE;
+                                int min_y = Integer.MAX_VALUE;
+                                int max_x = Integer.MIN_VALUE;
+                                int max_y = Integer.MIN_VALUE;
+                                for(Coordinate c : freeHandCoordinates) {
+                                    min_x = java.lang.Math.min(min_x,c.x);
+                                    min_y = java.lang.Math.min(min_y,c.y);
+                                    max_x = java.lang.Math.max(max_x,c.x);
+                                    max_y = java.lang.Math.max(max_y,c.y);
+                                } Area editArea = new Area(min_x,min_y,max_x,max_y);
+                                editArea.expand(brush.brushSize() / 2);
+                                if (projectArea.intersection(editArea)) {
+                                    URM.newEdit(editArea,currentChannel,brush);
+                                    graphics.drawToBackbuffer();
+                                }
+                            }
+                        }
+                        case LINE_DRAW -> {
+                            Area editArea = new Area(
+                                    lineDrawCoordinates.p0(),
+                                    lineDrawCoordinates.p1());
+                            editArea.expand(brush.brushSize() / 2);
+                            if (projectArea.intersection(editArea)) {
+                                URM.newEdit(editArea,currentChannel,brush);
+                                graphics.drawToBackbuffer();
+                            }
+                        }
+                        case DRAG_AREA -> {
+                            Area editArea = new Area(brushDragArea);
+                            if (projectArea.intersection(editArea)) {
+                                URM.newEdit(editArea,currentChannel,brush);
+                                graphics.drawToBackbuffer();
+                            }
+                        }
+                        default -> {}
+                    }
+                } else { // CONTINUE EDITING
+                    currently_dragging = true;
+                    switch (brush.tool()) {
+                        case FREE_HAND -> {
+                            if (editableAreaBounds.contains(mouseCoordCurrent)) {
+                                freeHandCoordinates.add(new Coordinate(mouseCoordCurrent));
+                            }
+                        }
+                        case LINE_DRAW -> lineDrawCoordinates.set(mouseCoordStart,mouseCoordCurrent);
+                        case DRAG_AREA -> brushDragArea.set( mouseCoordStart, mouseCoordCurrent);
+                        default -> {}
+                    }
+                }
+            } else if (mouse.just_started_drag(Mouse.LEFT)) {
+                if (editableAreaBounds.contains(mouseCoordCurrent)) { // START EDITING
+                    currently_dragging = true;
+                    currently_editing = true;
+                    freeHandCoordinates.clear();
+                    mouseStart.set(mouseCurrent);
+                    mouseCoordStart.set(mouseCoordCurrent);
+                    brushDragArea.set(mouseCoordStart);
+                }
+            }
+        }
+    }
     
     private void processInput(Mouse mouse, Keyboard keys) {
         final boolean PROJECT_OPEN = projectIsOpen();
@@ -224,11 +380,11 @@ public class Editor implements Disposable {
             } else if (keys.just_pressed(GLFW_KEY_PAGE_DOWN)) {
                 setDetailVolumeRatio(detail_to_volume_ratio - 0.1f);
             } else if (keys.just_pressed(GLFW_KEY_BACKSLASH)) {
-                canvasGrid.toggleHide();
+                graphics.grid().toggleHide();
             } else if (keys.just_pressed(GLFW_KEY_KP_MULTIPLY)) {
-                canvasGrid.incrementSize();
+                graphics.grid().incrementSize();
             } else if (keys.just_pressed(GLFW_KEY_KP_DIVIDE)) {
-                canvasGrid.decrementSize();
+                graphics.grid().decrementSize();
             } else if (keys.just_pressed(GLFW_KEY_S)) {
                 brush.toggleShape();
             } else if (keys.just_pressed(GLFW_KEY_KP_ADD)) {
@@ -292,7 +448,7 @@ public class Editor implements Disposable {
         return projectList;
     }
     
-    public void setActiveProject(Project project) {
+    private void setActiveProject(Project project) {
         if (project != null) {
             Vector4f bounds = project.bounds();
             editableAreaBounds.set(
@@ -349,9 +505,18 @@ public class Editor implements Disposable {
         }
     }
     
+    public CanvasBackground background() {
+        return graphics.background();
+    }
+    
+    public CanvasGrid grid() {
+        return graphics.grid();
+    }
+    
     public Brush brush() {
         return brush;
     }
+    
     public PreviewLighting lighting() {
         return lighting;
     }
@@ -359,20 +524,31 @@ public class Editor implements Disposable {
     public PreviewDisplay previewDisplay() {
         return previewDisplay;
     }
+    
     public void setPreviewDisplay(PreviewDisplay previewDisplay) {
         this.previewDisplay = previewDisplay;
     }
     
-    public void togglePreviewLighting() { preview_lighting = !preview_lighting; }
-    public void togglePreviewShadow() { preview_shadow = !preview_shadow; }
-    public void togglePreviewPalette() { preview_palette = !preview_palette; }
+    public void togglePreviewLighting() {
+        preview_lighting = !preview_lighting;
+    }
+    
+    public void togglePreviewShadow() {
+        preview_shadow = !preview_shadow;
+    }
+    
+    public void togglePreviewPalette() {
+        preview_palette = !preview_palette;
+    }
     
     public Palette getCurrentPalette() {
         return currentPalette;
     }
+    
     public void setPalette(Palette palette) {
         this.currentPalette = palette;
     }
+    
     public void setPaletteDefault() {
         this.currentPalette = defaultPalette;
     }
@@ -380,24 +556,31 @@ public class Editor implements Disposable {
     public float detailVolumeRatio() {
         return detail_to_volume_ratio;
     }
+    
     public float depthAmplitude() {
         return virtual_depth_amplitude;
     }
+    
     public boolean isCurrentlyEditing() {
         return currently_editing;
     }
+    
     public boolean isCurrentlyDragging() {
         return currently_dragging;
     }
+    
     public boolean projectIsOpen() {
         return activeProject != null;
     }
+    
     public boolean previewLighting() {
         return preview_lighting;
     }
+    
     public boolean previewShadow() {
         return preview_shadow;
     }
+    
     public boolean previewPalette() {
         return preview_palette;
     }

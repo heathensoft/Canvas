@@ -129,14 +129,16 @@ public class TestApp extends Application {
     }
     
     protected void on_exit() {
+        
         /*
         try {
-            renderer.project.save(External.USER_HOME("desktop","f"),true);
+            renderer.project.saveDepth(true);
         } catch (Exception e) {
             e.printStackTrace();
         }
         
          */
+        
         Disposable.dispose(renderer);
     }
     

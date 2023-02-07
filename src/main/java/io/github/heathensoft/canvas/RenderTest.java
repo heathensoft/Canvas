@@ -71,7 +71,7 @@ public class RenderTest implements Disposable {
         this.brush = new Brush(
                 ENUM.BrushShape.ROUND,
                 ENUM.BrushTool.FREE_HAND,
-                ENUM.BrushFunction.SMOOTHEN,
+                ENUM.BrushFunction.SHARPEN,
                 32
         );
         

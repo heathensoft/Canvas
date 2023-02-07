@@ -15,31 +15,31 @@ import org.tinylog.Logger;
 
 public class Shaders {
     
-    public static final String TEXTURE_DEPTH_MIXING_VERT = "res/glsl/canvas/texture/texture_depth_mixing.vert";
-    public static final String TEXTURE_DEPTH_MIXING_FRAG = "res/glsl/canvas/texture/texture_depth_mixing.frag";
-    public static final String TEXTURE_LIGHTING_VERT = "res/glsl/canvas/texture/texture_lighting.vert";
-    public static final String TEXTURE_LIGHTING_FRAG = "res/glsl/canvas/texture/texture_lighting.frag";
-    public static final String TEXTURE_NORMAL_MAPPING_VERT = "res/glsl/canvas/texture/texture_normal_mapping.vert";
-    public static final String TEXTURE_NORMAL_MAPPING_FRAG = "res/glsl/canvas/texture/texture_normal_mapping.frag";
-    public static final String TEXTURE_PASSTHROUGH_VERT = "res/glsl/canvas/texture/texture_passthrough.vert";
-    public static final String TEXTURE_PASSTHROUGH_FRAG = "res/glsl/canvas/texture/texture_passthrough.frag";
-    public static final String TEXTURE_SHADOW_MAPPING_VERT = "res/glsl/canvas/texture/texture_shadow_mapping.vert";
-    public static final String TEXTURE_SHADOW_MAPPING_FRAG = "res/glsl/canvas/texture/texture_shadow_mapping.frag";
+    public static final String TEXTURE_DEPTH_MIXING_VERT = "res/glsl/canvas/textureold/texture_depth_mixing.vert";
+    public static final String TEXTURE_DEPTH_MIXING_FRAG = "res/glsl/canvas/textureold/texture_depth_mixing.frag";
+    public static final String TEXTURE_LIGHTING_VERT = "res/glsl/canvas/textureold/texture_lighting.vert";
+    public static final String TEXTURE_LIGHTING_FRAG = "res/glsl/canvas/textureold/texture_lighting.frag";
+    public static final String TEXTURE_NORMAL_MAPPING_VERT = "res/glsl/canvas/textureold/texture_normal_mapping.vert";
+    public static final String TEXTURE_NORMAL_MAPPING_FRAG = "res/glsl/canvas/textureold/texture_normal_mapping.frag";
+    public static final String TEXTURE_PASSTHROUGH_VERT = "res/glsl/canvas/textureold/texture_passthrough.vert";
+    public static final String TEXTURE_PASSTHROUGH_FRAG = "res/glsl/canvas/textureold/texture_passthrough.frag";
+    public static final String TEXTURE_SHADOW_MAPPING_VERT = "res/glsl/canvas/textureold/texture_shadow_mapping.vert";
+    public static final String TEXTURE_SHADOW_MAPPING_FRAG = "res/glsl/canvas/textureold/texture_shadow_mapping.frag";
     public static final String TEXTURE_TO_CANVAS_SPACE_VERT = "res/glsl/canvas/texture_to_canvas_space.vert";
     public static final String TEXTURE_TO_CANVAS_SPACE_FRAG = "res/glsl/canvas/texture_to_canvas_space.frag";
     public static final String CANVAS_TO_SCREEN_SPACE_VERT = "res/glsl/canvas/canvas_to_screen_space.vert";
     public static final String CANVAS_TO_SCREEN_SPACE_FRAG = "res/glsl/canvas/canvas_to_screen_space.frag";
     public static final String CANVAS_BACKGROUND_VERT = "res/glsl/canvas/canvas_background.vert";
     public static final String CANVAS_BACKGROUND_FRAG = "res/glsl/canvas/canvas_background.frag";
-    public static final String STROKE_TO_BRUSH_OVERLAY_VERT = "res/glsl/canvas/brush/stroke_to_brush_overlay.vert";
-    public static final String STROKE_TO_BRUSH_OVERLAY_FRAG = "res/glsl/canvas/brush/stroke_to_brush_overlay.frag";
-    public static final String STROKE_TO_BRUSH_OVERLAY_GEOM = "res/glsl/canvas/brush/stroke_to_brush_overlay.geom";
-    public static final String AREA_TO_BRUSH_OVERLAY_VERT = "res/glsl/canvas/brush/area_to_brush_overlay.vert";
-    public static final String AREA_TO_BRUSH_OVERLAY_FRAG = "res/glsl/canvas/brush/area_to_brush_overlay.frag";
-    public static final String FRONT_TO_BACKBUFFER_VERT = "res/glsl/canvas/texture/front_to_backbuffer.vert";
-    public static final String FRONT_TO_BACKBUFFER_FRAG = "res/glsl/canvas/texture/front_to_backbuffer.frag";
-    public static final String BACK_TO_FRONTBUFFER_VERT = "res/glsl/canvas/texture/back_to_frontbuffer.vert";
-    public static final String BACK_TO_FRONTBUFFER_FRAG = "res/glsl/canvas/texture/back_to_frontbuffer.frag";
+    public static final String STROKE_TO_BRUSH_OVERLAY_VERT = "res/glsl/canvas/brushold/stroke_to_brush_overlay.vert";
+    public static final String STROKE_TO_BRUSH_OVERLAY_FRAG = "res/glsl/canvas/brushold/stroke_to_brush_overlay.frag";
+    public static final String STROKE_TO_BRUSH_OVERLAY_GEOM = "res/glsl/canvas/brushold/stroke_to_brush_overlay.geom";
+    public static final String AREA_TO_BRUSH_OVERLAY_VERT = "res/glsl/canvas/brushold/area_to_brush_overlay.vert";
+    public static final String AREA_TO_BRUSH_OVERLAY_FRAG = "res/glsl/canvas/brushold/area_to_brush_overlay.frag";
+    public static final String FRONT_TO_BACKBUFFER_VERT = "res/glsl/canvas/textureold/front_to_backbuffer.vert";
+    public static final String FRONT_TO_BACKBUFFER_FRAG = "res/glsl/canvas/textureold/front_to_backbuffer.frag";
+    public static final String BACK_TO_FRONTBUFFER_VERT = "res/glsl/canvas/textureold/back_to_frontbuffer.vert";
+    public static final String BACK_TO_FRONTBUFFER_FRAG = "res/glsl/canvas/textureold/back_to_frontbuffer.frag";
     
     public static final String U_OPTIONS = "u_options";                 // int
     public static final String U_SAMPLER_2D = "u_sampler_2d";           // int

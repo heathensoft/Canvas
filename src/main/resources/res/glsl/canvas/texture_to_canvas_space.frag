@@ -2,6 +2,7 @@
 
 layout (location=0) out vec4 f_color_left;  // canvas side (current front buffer)
 layout (location=1) out vec4 f_color_right; // preview side
+// layout (location=2) out vec4 f_contour; // contour
 
 in VS_OUT {
     vec2 uv;

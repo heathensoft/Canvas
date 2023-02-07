@@ -386,7 +386,7 @@ public class Editor implements Disposable {
                                 editArea.translate(trans,trans);
                                 editArea.expand(brush.brushSize() / 2);
                                 if (projectArea.intersects(editArea)) {
-                                    urManager.newEdit(editArea,current_channel,brush);
+                                   // urManager.newEdit(editArea,current_channel,brush);
                                     // renderer draw to back
                                 }
                             }
@@ -396,7 +396,7 @@ public class Editor implements Disposable {
                             Area editArea = new Area(lineDraw_coordinates.p0(),lineDraw_coordinates.p1());
                             editArea.expand(brush.brushSize() / 2);
                             if (projectArea.intersects(editArea)) {
-                                urManager.newEdit(editArea,current_channel,brush);
+                               // urManager.newEdit(editArea,current_channel,brush);
                                 // renderer draw to back
                             }
                         }
@@ -404,7 +404,7 @@ public class Editor implements Disposable {
                             
                             Area editArea = new Area(brush_drag_area);
                             if (projectArea.intersects(editArea)) {
-                                urManager.newEdit(editArea,current_channel,brush);
+                                //urManager.newEdit(editArea,current_channel,brush);
                                 // renderer draw to back
                             }
                         }

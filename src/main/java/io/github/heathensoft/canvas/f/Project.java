@@ -3,6 +3,8 @@ package io.github.heathensoft.canvas.f;
 import io.github.heathensoft.canvas.f.io.PngExporter;
 import io.github.heathensoft.canvas.f.io.PngImporter;
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.Area;
+import io.github.heathensoft.jlib.common.utils.Coordinate;
 import io.github.heathensoft.jlib.lwjgl.graphics.BufferObject;
 import io.github.heathensoft.jlib.lwjgl.graphics.Framebuffer;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
@@ -10,6 +12,7 @@ import io.github.heathensoft.jlib.lwjgl.graphics.TextureFormat;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector4f;
 
 import java.nio.FloatBuffer;
@@ -34,6 +37,7 @@ public class Project implements Disposable, Comparable<Project> {
     private final int project_id;
     private String project_name;
     private Path output_directory;
+    private final Area area;
     private final Vector4f bounds;
     private final Texture colorSource;
     private final Framebuffer brushOverlayBuffer;
@@ -48,6 +52,7 @@ public class Project implements Disposable, Comparable<Project> {
     public Project(PngImporter.Textures sources, int id) throws Exception {
         
         colorSource = sources.color_source();
+        area = new Area(0,0,texturesWidth(),texturesHeight());
         bounds = new Vector4f(0.0f,0.0f,texturesWidth(),texturesHeight());
         undoRedoManager = new UndoRedoManager(this);
     
@@ -275,8 +280,20 @@ public class Project implements Disposable, Comparable<Project> {
         return bounds;
     }
     
+    public void translate(Vector2f translation) {
+        bounds.x += translation.x;
+        bounds.y += translation.y;
+        bounds.z += translation.x;
+        bounds.w += translation.y;
+        area.set((int) bounds.x,(int) bounds.y,(int) bounds.z,(int) bounds.w);
+    }
+    
     public void setProjectName(String name) {
         this.project_name = name;
+    }
+    
+    public boolean withinBounds(Coordinate coordinate) {
+        return area.contains(coordinate);
     }
     
     public boolean setOutputDirectory(Path path) {

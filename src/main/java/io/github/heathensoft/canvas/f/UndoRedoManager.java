@@ -1,12 +1,12 @@
 package io.github.heathensoft.canvas.f;
 
-import io.github.heathensoft.canvas.brush.Brush;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.Area;
 import io.github.heathensoft.jlib.common.utils.UndoRedo;
 import io.github.heathensoft.jlib.lwjgl.graphics.Framebuffer;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
 import org.lwjgl.system.MemoryUtil;
+import org.tinylog.Logger;
 
 import java.nio.ByteBuffer;
 
@@ -103,6 +103,7 @@ public class UndoRedoManager implements Disposable {
         Area textureArea = new Area(0,0,tex_w,tex_h);
         editArea.translate(x_offset,y_offset);
         if (!textureArea.intersection(editArea)) {
+            Logger.warn("should not happen");
             editArea.set(textureArea);
         } return new UndoRedoObject(
                 project.backBuffer(), editArea, channel, tool, function);

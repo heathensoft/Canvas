@@ -15,7 +15,7 @@ layout (std140, binding = EDITOR_BINDING_POINT) uniform EditorBlock {
     float detail_to_volume_ratio;
     vec2 std140_padding;
     float real_time;
-    float preview_opttions; // cast to int
+    float preview_options; // cast to int
 };
 
 struct PreviewOptions {
@@ -115,6 +115,10 @@ bool usingPointLight(Lignt light) {
 
 Attenuation attenuation(Lignt light) {
     return light.att[clamp(int(light.brightness), 0, LIGHT_LEVELS -1)];
+}
+
+vec3 clampColor(vec3 rgb) {
+    return clamp(rgb, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0));
 }
 
 float energyConservation(float shine) {
