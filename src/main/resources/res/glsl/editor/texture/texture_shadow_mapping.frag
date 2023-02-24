@@ -1,6 +1,6 @@
 #version 440
 
-layout (location=0) out vec4 f_color; // shadowmap
+layout (location=0) out float f_color; // shadowmap
 
 uniform sampler2D u_sampler_2d; // depthmap
 
@@ -70,9 +70,11 @@ bool usingPointLight(Light light) {
 }
 //********************************************************************
 
+#define MAX_SHADOW_LENGTH 64.0
 #define PI_HALF 1.5707963268
-#define SAMPLE_DENSITY 4.0
+#define SAMPLE_DENSITY 8.0
 #define MAX_SAMPLES 128
+#define E 2.71828182846
 
 const vec3 PLANE_NORMAL = vec3(0.0,0.0,1.0);
 
@@ -95,25 +97,35 @@ void main() {
     float sinA = sin(A);
     float C = PI_HALF - A;
     float b = a / sinA;
-    float c = b * sin(C);
+    float sinC = sin(C);
+    float c = b * sinC;
+    if(c > MAX_SHADOW_LENGTH) {
+        c = MAX_SHADOW_LENGTH;
+        b = c / sinC;
+    }
 
-    int num_samples = int(min(MAX_SAMPLES,int(round(c * SAMPLE_DENSITY))));
+    int num_samples = max(1,(int(min(MAX_SAMPLES,int(round(c * SAMPLE_DENSITY))))));
+
     float sample_delta = b / num_samples;
     vec3 move_vec = vec3(to_light_dir) * sample_delta;
-    vec3 sample_pos = vec3(gl_FragCoord.xy,0.0); // z does not matter i think
-    float shadow_add = 1.0 / num_samples;
+    vec3 sample_pos = vec3(gl_FragCoord.xy,0.0);
+    float fade_step = 1.0 / float(num_samples);
     float shadow = 0.0;
-    float sample_depth;
-    vec2 sample_uv;
+    fragment_depth_value += 0.001;
 
     for(int i = 0; i < num_samples; i++) {
         sample_pos += move_vec;
-        sample_uv = sample_pos.xy / tex_size;
-        sample_depth = sampleDepth(sample_uv).r;
+        vec2 sample_uv = sample_pos.xy / tex_size;
+        float sample_depth = sampleDepth(sample_uv).r;
         if(sample_depth > fragment_depth_value) {
-            shadow += shadow_add;
+            float fade_x = (fade_step * (i + 1.0));
+            float fade = pow(E, fade_x) * (1 - fade_x);
+            shadow += (sample_depth - fragment_depth_value) * fade;
+            shadow += fade_step;
         }
     }
-    f_color = vec4(shadow, shadow, shadow, 1.0);
+    float color = 1.0 - (shadow / num_samples);
+
+    f_color = color * color;
 
 }

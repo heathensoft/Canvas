@@ -1,7 +1,5 @@
 #version 440
 
-// can use this when drawinng back to front
-
 layout (location=0) out vec4 f_color; // current channel front
 
 uniform sampler2D[2] u_sampler_array;
@@ -106,8 +104,10 @@ void main() {
             }
         } else if(function == BRUSH_FUNCTION_RAI) {
             final_color = back_buffer_red + brush_overlay_red * brush_color_red;
+            final_color = min(final_color,brush_color_red);
         } else if(function == BRUSH_FUNCTION_LOW) {
             final_color = back_buffer_red - brush_overlay_red * brush_color_red;
+
         }
         final_color = clamp(final_color,0.0,1.0);
 

@@ -62,7 +62,6 @@ void main() {
     if(!withinRadius(fs_in.pos, light.position.xy, R2)) {
         color.rgb *= DARKEN;
     }
-    // if(!withinArea(fs_in.pos, tex.bounds)) {}
     f_color = color;
 }
 

@@ -2,8 +2,6 @@
 
 layout (location=0) in vec2 a_uv;
 
-
-
 vec2 uv_to_ndc(vec2 uv) {
     float x = uv.x * 2 - 1;
     float y = uv.y * 2 - 1;

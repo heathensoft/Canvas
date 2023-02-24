@@ -2,12 +2,10 @@ package io.github.heathensoft.canvas;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.*;
-import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.IntBuffer;
 
-import static io.github.heathensoft.canvas.Shaders.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
@@ -55,11 +53,12 @@ public class CanvasBackground implements Disposable {
     
     public void draw() {
         glDisable(GL_BLEND);
-        canvasBackgroundProgram.use();
-        canvasBackgroundProgram.setUniform1i(U_SAMPLER_2D,0);
+        Shaders.canvasBackgroundProgram.use();
+        Shaders.canvasBackgroundProgram.setUniform1i(Shaders.U_SAMPLER_2D,0);
         backgroundTexture.bindToSlot(0);
         vertexArrayObject.bind();
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0);
+        Texture.unbindActiveSlot(backgroundTexture.target());
     }
     
     public void setColors(Color c0, Color c1) {

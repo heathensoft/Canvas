@@ -1,5 +1,43 @@
 #version 440
 
+#define EDITOR_BINDING_POINT 1 // *************************************
+// 36
+struct Camera {
+    mat4 combined;
+    mat4 combined_inv;
+    vec3 position;
+    float zoom;
+};
+// 44
+layout (std140, binding = EDITOR_BINDING_POINT) uniform EditorBlock {
+    Camera camera;
+    vec2 mouse_world;
+    float depth_amplitude;
+    float detail_to_volume_ratio;
+    vec2 std140_padding;
+    float real_time;
+    float preview_options; // cast to int
+};
+
+struct PreviewOptions {
+    bool output_depthmap; // precedence
+    bool output_normalmap;
+    bool output_shadowmap;
+    bool use_lighting;
+    bool use_shadowmap;
+    bool use_palette;
+};
+
+PreviewOptions getOptions(int options) {
+    return PreviewOptions (
+        bool(options & 1),
+        bool(options & 2),
+        bool(options & 4),
+        bool(options & 8),
+        bool(options & 16),
+        bool(options & 32));
+}
+
 #define BRUSH_BINDING_POINT 3 // **************************************
 
 #define BRUSH_TOOL_SAMPLER 0
@@ -43,7 +81,7 @@ layout (std140, binding = BRUSH_BINDING_POINT) uniform BrushBlock {
 layout (location=0) out vec4 f_color;
 
 uniform sampler2D[3] u_sampler_array;
-uniform vec2 u_framebuffer_size_inv;
+uniform vec2 u_canvas_size_inv;
 
 in flat int instance_id;
 in vec2 uv;
@@ -63,18 +101,15 @@ void main() {
 
     vec4 color_out = texture(u_sampler_array[instance_id], uv);
 
-    if(instance_id == PREVIEW_SIDE || brush.tool == BRUSH_TOOL_SAMPLER) {
+    if(instance_id == PREVIEW_SIDE || brush.tool == BRUSH_TOOL_SAMPLER || brush.tool == BRUSH_TOOL_DRAG_AREA) {
         float contour_red = sampleContourRed(uv);
         if(contour_red > 0.0) {
             float accumulated = 0.0;
             for(int i = 0; i < 8; i++) {
-                vec2 sample_uv = uv + (ADJACENT_ARRAY[i] * u_framebuffer_size_inv);
+                vec2 sample_uv = uv + (ADJACENT_ARRAY[i] * u_canvas_size_inv);
                 float sample_red = sampleContourRed(sample_uv);
                 if(sample_red > 0.0) accumulated += 1.0;
-            }
-            if(accumulated < 8.0) {
-                color_out = CONTOUR_COLOR;
-            }
+            } if(accumulated < 8.0) color_out = CONTOUR_COLOR;
         }
     }
     f_color = color_out;

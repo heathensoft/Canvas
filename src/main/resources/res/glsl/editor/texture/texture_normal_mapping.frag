@@ -45,8 +45,8 @@ float normalDepth(float d, float amp) {return (2.0 * d - 1.0) * amp;}
 sampler2D depthSampler() {return u_sampler_array[0];}
 sampler2D colorSampler() {return u_sampler_array[1];}
 
-vec4 fetchColor(ivec2 texel) {return texelFetch(colorSampler(), texel, 0);}
 vec4 fetchDepth(ivec2 texel) {return texelFetch(depthSampler(), texel, 0);}
+vec4 fetchColor(ivec2 texel) {return texelFetch(colorSampler(), texel, 0);}
 
 ivec2 ce() {return (ivec2(gl_FragCoord.xy));}
 ivec2 up() {return (ivec2(gl_FragCoord.xy) + ivec2( 0, 1));}

@@ -6,10 +6,6 @@ uniform sampler2D[6] u_sampler_array;
 uniform sampler3D u_sampler_3d;
 uniform int u_options;
 
-in VS_OUT {
-    vec2 uv;
-} fs_in;
-
 //********************************************************************
 // Common
 
@@ -114,7 +110,6 @@ void main() {
 
     vec4 color = vec4(1.0,1.0,1.0,1.0);
 
-    vec2 uv = fs_in.uv;
     ivec2 texel = ivec2(gl_FragCoord.xy);
 
     vec4 source_color = fetchColor(texel);

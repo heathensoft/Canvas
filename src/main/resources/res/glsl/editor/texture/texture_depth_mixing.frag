@@ -1,6 +1,6 @@
 #version 440
 
-layout (location=0) out vec4 f_color;
+layout (location=0) out float f_color;
 
 uniform sampler2D[2] u_sampler_array;
 
@@ -37,7 +37,7 @@ void main() {
     float detail_red = fetchDetail(ivec2(gl_FragCoord.xy)).r;
     float volume_red = fetchVolume(ivec2(gl_FragCoord.xy)).r;
     float mixed_red = mix(volume_red,detail_red,weight);
-    f_color = vec4(mixed_red,0.0,0.0,1.0);
+    f_color = mixed_red;
 
 }
 
